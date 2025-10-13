@@ -1,12 +1,9 @@
-import mysql from "mysql2/promise";
-import dotenv from "dotenv";
-dotenv.config();
+import sqlite3 from 'sqlite3';
+import { open } from 'sqlite';
 
-export const pool = mysql.createPool({
-  host: process.env.MYSQL_HOST,
-  user: process.env.MYSQL_USER,
-  password: process.env.MYSQL_PASSWORD,
-  database: process.env.MYSQL_DATABASE,
-  waitForConnections: true,
-  connectionLimit: 10,
-});
+// Open the SQLite database (creates file if it doesn't exist)
+export const openDb = async () =>
+  open({
+    filename: './attendance.db',
+    driver: sqlite3.Database,
+  });

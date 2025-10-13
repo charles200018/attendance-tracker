@@ -10,6 +10,10 @@
     "cors": "^2.8.5",
     "dotenv": "^16.1.4",
     "express": "^4.18.2",
-    "mysql2": "^3.2.3"
-  }
+    "sqlite3": "^5.1.7"
+  },
+  "description": "1. Install dependencies:",
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
 }
