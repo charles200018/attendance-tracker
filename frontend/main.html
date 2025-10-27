@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Attendance Tracker Pro</title>
+  
+  <!-- External Libraries -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    /* Custom Animations */
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .slide-in { animation: slideIn 0.3s ease-out; }
+    .hover-scale { 
+      transition: transform 0.2s ease;
+    }
+    .hover-scale:hover { 
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+
+<body class="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 min-h-screen">
+  
+  <!-- Connection Status Banner -->
+  <div id="status-banner" class="bg-gradient-to-r from-green-500 to-green-600 text-white p-3 text-center shadow-lg transition-all">
+    <div class="container mx-auto flex items-center justify-center gap-4">
+      <i class="fas fa-circle-check"></i>
+      <span id="connection-status">Connecting to Backend...</span>
+    </div>
+  </div>
+  
+  <!-- Main Navigation -->
+  <nav class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-xl">
+    <div class="container mx-auto px-6 py-4">
+      <div class="flex items-center justify-between flex-wrap gap-4">
+        <div class="flex items-center gap-3">
+          <i class="fas fa-graduation-cap text-3xl"></i>
+          <div>
+            <h1 class="text-2xl font-bold">Attendance Tracker Pro</h1>
+            <p class="text-xs opacity-90">Manage classes, students & attendance effortlessly</p>
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="showTab('dashboard')" 
+                  class="px-4 py-2 bg-white bg-opacity-20 rounded-lg hover:bg-opacity-30 transition flex items-center gap-2">
+            <i class="fas fa-home"></i> Dashboard
+          </button>
+          <button onclick="showTab('statistics')" 
+                  class="px-4 py-2 bg-white bg-opacity-20 rounded-lg hover:bg-opacity-30 transition flex items-center gap-2">
+            <i class="fas fa-chart-bar"></i> Statistics
+          </button>
+          <button onclick="location.reload()" 
+                  class="px-4 py-2 bg-white bg-opacity-20 rounded-lg hover:bg-opacity-30 transition flex items-center gap-2">
+            <i class="fas fa-sync-alt"></i> Refresh
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+  
+  <!-- Main Application Container -->
+  <div class="container mx-auto px-4 md:px-6 py-8">
+    
+    <!-- Statistics Tab -->
+    <div id="statistics-tab" class="hidden">
+      <section class="mb-8">
+        <div class="bg-white bg-opacity-95 rounded-xl shadow-2xl p-6">
+          <div class="flex items-center gap-2 mb-6">
+            <i class="fas fa-chart-bar text-purple-600 text-xl"></i>
+            <h2 class="text-2xl font-bold text-gray-800">Student Attendance Statistics</h2>
+          </div>
+          
+          <!-- Filter Controls -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <select id="stats-student" onchange="loadStudentStatistics()" 
+                    class="px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none transition">
+              <option value="">Select Student</option>
+            </select>
+            <select id="stats-class" onchange="loadStudentStatistics()" 
+                    class="px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none transition">
+              <option value="">All Classes</option>
+            </select>
+          </div>
+          
+          <!-- Statistics Display -->
+          <div id="student-statistics">
+            <p class="text-gray-400 text-center py-8">
+              <i class="fas fa-user-graduate text-3xl mb-2 block"></i>
+              Select a student to view their attendance statistics
+            </p>
+          </div>
+        </div>
+      </section>
+    </div>
+    
+    <!-- Dashboard Tab -->
+    <div id="dashboard-tab">
+    
+    <!-- Dashboard Statistics -->
+    <section class="mb-8">
+      <div class="bg-white bg-opacity-95 rounded-xl shadow-2xl p-6">
+        <div class="flex items-center gap-2 mb-4">
+          <i class="fas fa-chart-line text-purple-600 text-xl"></i>
+          <h2 class="text-2xl font-bold text-gray-800">Dashboard Overview</h2>
+        </div>
+        <div id="dashboard-stats" class="min-h-[120px]">
+          <div class="flex justify-center items-center py-8">
+            <i class="fas fa-spinner fa-spin text-3xl text-purple-600"></i>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Class and Student Management Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+      
+      <!-- Class Management Card -->
+      <article class="bg-white bg-opacity-95 rounded-xl shadow-2xl p-6 hover-scale">
+        <div class="flex items-center gap-2 mb-4">
+          <i class="fas fa-school text-blue-600 text-xl"></i>
+          <h2 class="text-2xl font-bold text-gray-800">Classes</h2>
+          <span id="class-count" class="ml-auto bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-sm font-semibold">0</span>
+        </div>
+        
+        <!-- Add Class Form -->
+        <div class="mb-4">
+          <div class="flex gap-2">
+            <input type="text" 
+                   id="className" 
+                   placeholder="Enter class name (e.g., Math 101)" 
+                   class="flex-1 px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition"
+                   onkeypress="if(event.key==='Enter') addClass()">
+            <button onclick="addClass()" 
+                    class="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition shadow-lg flex items-center gap-2">
+              <i class="fas fa-plus"></i> Add
+            </button>
+          </div>
+        </div>
+        
+        <!-- Classes List -->
+        <div id="classes-list" class="max-h-96 overflow-y-auto space-y-2">
+          <p class="text-gray-500 text-center py-4">Loading classes...</p>
+        </div>
+      </article>
+
+      <!-- Student Management Card -->
+      <article class="bg-white bg-opacity-95 rounded-xl shadow-2xl p-6 hover-scale">
+        <div class="flex items-center gap-2 mb-4">
+          <i class="fas fa-user-graduate text-green-600 text-xl"></i>
+          <h2 class="text-2xl font-bold text-gray-800">Students</h2>
+          <span id="student-count" class="ml-auto bg-green-100 text-green-600 px-3 py-1 rounded-full text-sm font-semibold">0</span>
+        </div>
+        
+        <!-- Add Student Form -->
+        <div class="space-y-3 mb-4">
+          <input type="text" 
+                 id="studentName" 
+                 placeholder="Student name" 
+                 class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-green-500 focus:outline-none transition">
+          <div class="grid grid-cols-2 gap-3">
+            <input type="text" 
+                   id="studentRoll" 
+                   placeholder="Roll number" 
+                   class="px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-green-500 focus:outline-none transition">
+            <select id="studentClass" 
+                    onchange="loadStudents()" 
+                    class="px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-green-500 focus:outline-none transition">
+              <option value="">Select Class</option>
+            </select>
+          </div>
+          <button onclick="addStudent()" 
+                  class="w-full bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition shadow-lg flex items-center justify-center gap-2">
+            <i class="fas fa-user-plus"></i> Add Student
+          </button>
+        </div>
+        
+        <!-- Students List -->
+        <div id="students-list" class="max-h-96 overflow-y-auto space-y-2">
+          <p class="text-gray-500 text-center py-4">Select a class to view students</p>
+        </div>
+      </article>
+      
+    </div>
+
+    <!-- Attendance Management Section -->
+    <section class="bg-white bg-opacity-95 rounded-xl shadow-2xl p-6">
+      <div class="flex items-center gap-2 mb-4">
+        <i class="fas fa-clipboard-check text-purple-600 text-xl"></i>
+        <h2 class="text-2xl font-bold text-gray-800">Mark Attendance</h2>
+      </div>
+      <div id="attendance-section">
+        <p class="text-gray-500 text-center py-4">Loading attendance form...</p>
+      </div>
+    </section>
+    
+    </div>
+    <!-- End Dashboard Tab -->
+
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="fixed top-20 right-6 z-50 space-y-2"></div>
+
+  <!-- Main Application Script -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    // ============================================
+    // CONFIGURATION
+    // ============================================
+    const API_URL = 'http://127.0.0.1:3002/api';
+    
+    // ============================================
+    // TAB MANAGEMENT
+    // ============================================
+    
+    function showTab(tabName) {
+      document.getElementById('dashboard-tab').classList.toggle('hidden', tabName !== 'dashboard');
+      document.getElementById('statistics-tab').classList.toggle('hidden', tabName !== 'statistics');
+      
+      if (tabName === 'statistics') {
+        loadStatisticsData();
+      }
+    }
+    
+    // ============================================
+    // UTILITY FUNCTIONS
+    // ============================================
+    
+    /**
+     * Display toast notification
+     */
+    function showToast(message, type = 'success') {
+      const colors = {
+        success: 'bg-green-50 border-green-500 text-green-700',
+        error: 'bg-red-50 border-red-500 text-red-700',
+        info: 'bg-blue-50 border-blue-500 text-blue-700',
+        warning: 'bg-yellow-50 border-yellow-500 text-yellow-700'
+      };
+      
+      const toast = document.createElement('div');
+      toast.className = `${colors[type]} border-l-4 p-4 rounded-lg shadow-lg slide-in flex items-center gap-3`;
+      toast.innerHTML = `
+        <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i>
+        <span>${message}</span>
+        <button onclick="this.parentElement.remove()" class="ml-auto text-gray-400 hover:text-gray-600">
+          <i class="fas fa-times"></i>
+        </button>
+      `;
+      
+      document.getElementById('toast-container').appendChild(toast);
+      setTimeout(() => toast.remove(), 4000);
+    }
+
+    /**
+     * Update connection status banner
+     */
+    function updateConnectionStatus(connected) {
+      const banner = document.getElementById('status-banner');
+      const status = document.getElementById('connection-status');
+      
+      if (connected) {
+        banner.className = 'bg-gradient-to-r from-green-500 to-green-600 text-white p-3 text-center shadow-lg transition-all';
+        status.innerHTML = '<i class="fas fa-circle-check"></i> Connected to Backend';
+      } else {
+        banner.className = 'bg-gradient-to-r from-red-500 to-red-600 text-white p-3 text-center shadow-lg transition-all';
+        status.innerHTML = '<i class="fas fa-circle-xmark"></i> Backend Connection Failed';
+      }
+    }
+
+    // ============================================
+    // DASHBOARD FUNCTIONS
+    // ============================================
+    
+    /**
+     * Load and display dashboard statistics
+     */
+    async function loadDashboard() {
+      try {
+        const [classesRes, studentsRes, attendanceRes] = await Promise.all([
+          fetch(`${API_URL}/classes`),
+          fetch(`${API_URL}/students`),
+          fetch(`${API_URL}/attendance`)
+        ]);
+        
+        const classes = await classesRes.json();
+        const students = await studentsRes.json();
+        const attendance = await attendanceRes.json();
+        
+        // Calculate today's stats
+        const today = new Date().toISOString().split('T')[0];
+        const todayAttendance = attendance.filter(a => a.date === today);
+        const present = todayAttendance.filter(a => a.status === 'present').length;
+        const late = todayAttendance.filter(a => a.status === 'late').length;
+        const absent = todayAttendance.filter(a => a.status === 'absent').length;
+        
+        document.getElementById('dashboard-stats').innerHTML = `
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+            <div class="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl p-6 shadow-lg hover-scale">
+              <div class="flex items-center justify-between">
+                <div>
+                  <div class="text-sm opacity-90 mb-1">Total Classes</div>
+                  <div class="text-4xl font-bold">${classes.length}</div>
+                </div>
+                <i class="fas fa-school text-5xl opacity-20"></i>
+              </div>
+            </div>
+            
+            <div class="bg-gradient-to-br from-green-500 to-green-600 text-white rounded-xl p-6 shadow-lg hover-scale">
+              <div class="flex items-center justify-between">
+                <div>
+                  <div class="text-sm opacity-90 mb-1">Total Students</div>
+                  <div class="text-4xl font-bold">${students.length}</div>
+                </div>
+                <i class="fas fa-user-graduate text-5xl opacity-20"></i>
+              </div>
+            </div>
+            
+            <div class="bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-xl p-6 shadow-lg hover-scale">
+              <div class="flex items-center justify-between">
+                <div>
+                  <div class="text-sm opacity-90 mb-1">Present Today</div>
+                  <div class="text-4xl font-bold">${present}</div>
+                  ${late > 0 ? `<div class="text-xs opacity-75">+${late} late</div>` : ''}
+                </div>
+                <i class="fas fa-check-circle text-5xl opacity-20"></i>
+              </div>
+            </div>
+            
+            <div class="bg-gradient-to-br from-red-500 to-red-600 text-white rounded-xl p-6 shadow-lg hover-scale">
+              <div class="flex items-center justify-between">
+                <div>
+                  <div class="text-sm opacity-90 mb-1">Absent Today</div>
+                  <div class="text-4xl font-bold">${absent}</div>
+                </div>
+                <i class="fas fa-times-circle text-5xl opacity-20"></i>
+              </div>
+            </div>
+          </div>
+        `;
+      } catch (error) {
+        console.error('Error loading dashboard:', error);
+        document.getElementById('dashboard-stats').innerHTML = 
+          '<p class="text-red-500 text-center py-4"><i class="fas fa-exclamation-triangle"></i> Error loading dashboard</p>';
+      }
+    }
+
+    // ============================================
+    // CLASS MANAGEMENT FUNCTIONS
+    // ============================================
+    
+    /**
+     * Load and display all classes
+     */
+    async function loadClasses() {
+      try {
+        const response = await fetch(`${API_URL}/classes`);
+        const classes = await response.json();
+        
+        document.getElementById('class-count').textContent = classes.length;
+        
+        const classList = document.getElementById('classes-list');
+        if (classes.length === 0) {
+          classList.innerHTML = '<p class="text-gray-400 text-center py-8"><i class="fas fa-inbox text-3xl mb-2 block"></i>No classes yet. Add one above!</p>';
+        } else {
+          classList.innerHTML = classes.map((c, i) => `
+            <div class="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-lg border-l-4 border-blue-500 hover-scale slide-in" style="animation-delay: ${i * 0.05}s">
+              <div class="flex items-center justify-between">
+                <div>
+                  <div class="font-bold text-lg text-blue-900">${c.name}</div>
+                  <div class="text-sm text-blue-600">Class ID: ${c.id}</div>
+                </div>
+                <i class="fas fa-school text-2xl text-blue-400"></i>
+              </div>
+            </div>
+          `).join('');
+        }
+        
+        // Update class dropdowns
+        const options = '<option value="">Select Class</option>' + 
+          classes.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+        document.getElementById('studentClass').innerHTML = options;
+        
+        const attendanceSelect = document.getElementById('attendance-class');
+        if (attendanceSelect) {
+          attendanceSelect.innerHTML = options;
+        }
+        
+      } catch (error) {
+        console.error('Error loading classes:', error);
+        showToast('Failed to load classes', 'error');
+      }
+    }
+
+    /**
+     * Add a new class
+     */
+    async function addClass() {
+      const input = document.getElementById('className');
+      const name = input.value.trim();
+      
+      if (!name) {
+        showToast('Please enter a class name', 'warning');
+        input.focus();
+        return;
+      }
+      
+      try {
+        const response = await fetch(`${API_URL}/classes`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name })
+        });
+        
+        if (response.ok) {
+          const newClass = await response.json();
+          input.value = '';
+          await Promise.all([loadClasses(), loadDashboard(), loadAttendanceForm()]);
+          showToast(`✓ Class "${newClass.name}" added successfully!`);
+        } else {
+          const error = await response.json();
+          showToast(error.error || 'Failed to add class', 'error');
+        }
+      } catch (error) {
+        console.error('Error adding class:', error);
+        showToast('Failed to add class', 'error');
+      }
+    }
+
+    // ============================================
+    // STUDENT MANAGEMENT FUNCTIONS
+    // ============================================
+    
+    /**
+     * Load and display students for selected class
+     */
+    async function loadStudents() {
+      const classId = document.getElementById('studentClass').value;
+      const container = document.getElementById('students-list');
+      
+      if (!classId) {
+        container.innerHTML = '<p class="text-gray-400 text-center py-8"><i class="fas fa-user-graduate text-3xl mb-2 block"></i>Select a class to view students</p>';
+        return;
+      }
+      
+      try {
+        const [studentsRes, allStudentsRes] = await Promise.all([
+          fetch(`${API_URL}/students/${classId}`),
+          fetch(`${API_URL}/students`)
+        ]);
+        
+        const students = await studentsRes.json();
+        const allStudents = await allStudentsRes.json();
+        
+        document.getElementById('student-count').textContent = allStudents.length;
+        
+        if (students.length === 0) {
+          container.innerHTML = '<p class="text-gray-400 text-center py-8"><i class="fas fa-user-slash text-3xl mb-2 block"></i>No students in this class yet</p>';
+        } else {
+          container.innerHTML = students.map((s, i) => `
+            <div class="bg-gradient-to-r from-green-50 to-green-100 p-3 rounded-lg border-l-4 border-green-500 hover-scale slide-in" style="animation-delay: ${i * 0.05}s">
+              <div class="flex items-center justify-between">
+                <div>
+                  <div class="font-semibold text-green-900">${s.name}</div>
+                  <div class="text-sm text-green-600">Roll: ${s.roll}</div>
+                </div>
+                <i class="fas fa-user-circle text-xl text-green-400"></i>
+              </div>
+            </div>
+          `).join('');
+        }
+        
+      } catch (error) {
+        console.error('Error loading students:', error);
+        showToast('Failed to load students', 'error');
+      }
+    }
+
+    /**
+     * Add a new student
+     */
+    async function addStudent() {
+      const name = document.getElementById('studentName').value.trim();
+      const roll = document.getElementById('studentRoll').value.trim();
+      const class_id = document.getElementById('studentClass').value;
+      
+      if (!name || !roll || !class_id) {
+        showToast('Please fill in all fields', 'warning');
+        return;
+      }
+      
+      try {
+        const response = await fetch(`${API_URL}/students`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, roll, class_id })
+        });
+        
+        if (response.ok) {
+          const newStudent = await response.json();
+          document.getElementById('studentName').value = '';
+          document.getElementById('studentRoll').value = '';
+          await Promise.all([loadStudents(), loadDashboard()]);
+          showToast(`✓ Student "${newStudent.name}" added successfully!`);
+        } else {
+          const error = await response.json();
+          showToast(error.error || 'Failed to add student', 'error');
+        }
+      } catch (error) {
+        console.error('Error adding student:', error);
+        showToast('Failed to add student', 'error');
+      }
+    }
+
+    // ============================================
+    // ATTENDANCE MANAGEMENT FUNCTIONS
+    // ============================================
+    
+    /**
+     * Load attendance form with class and date selectors
+     */
+    async function loadAttendanceForm() {
+      try {
+        const response = await fetch(`${API_URL}/classes`);
+        const classes = await response.json();
+        
+        const today = new Date().toISOString().split('T')[0];
+        
+        document.getElementById('attendance-section').innerHTML = `
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <select id="attendance-class" 
+                    onchange="showAttendanceTable()"
+                    class="px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none transition">
+              <option value="">Select Class</option>
+              ${classes.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}
+            </select>
+            <input id="attendance-date" 
+                   type="date" 
+                   value="${today}" 
+                   max="${today}" 
+                   onchange="showAttendanceTable()"
+                   class="px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none transition">
+          </div>
+          <div id="attendance-table">
+            <p class="text-gray-400 text-center py-8">
+              <i class="fas fa-hand-pointer text-3xl mb-2 block"></i>
+              Select a class and date to mark attendance
+            </p>
+          </div>
+        `;
+      } catch (error) {
+        console.error('Error loading attendance form:', error);
+        showToast('Failed to load attendance form', 'error');
+      }
+    }
+
+    /**
+     * Display attendance table for selected class and date
+     */
+    async function showAttendanceTable() {
+      const classId = document.getElementById('attendance-class').value;
+      const date = document.getElementById('attendance-date').value;
+      const container = document.getElementById('attendance-table');
+      
+      if (!classId || !date) {
+        container.innerHTML = `
+          <p class="text-gray-400 text-center py-8">
+            <i class="fas fa-hand-pointer text-3xl mb-2 block"></i>
+            Select a class and date to mark attendance
+          </p>
+        `;
+        return;
+      }
+      
+      try {
+        const [studentsRes, attendanceRes] = await Promise.all([
+          fetch(`${API_URL}/students/${classId}`),
+          fetch(`${API_URL}/attendance/${classId}/${date}`)
+        ]);
+        
+        const students = await studentsRes.json();
+        const attendance = attendanceRes.ok ? await attendanceRes.json() : [];
+        
+        if (students.length === 0) {
+          container.innerHTML = `
+            <p class="text-gray-400 text-center py-8">
+              <i class="fas fa-user-slash text-3xl mb-2 block"></i>
+              No students in this class. Add students first.
+            </p>
+          `;
+          return;
+        }
+        
+        container.innerHTML = `
+          <form onsubmit="submitAttendance(event)" class="bg-white rounded-xl border-2 border-gray-200 overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full">
+                <thead class="bg-gradient-to-r from-purple-500 to-purple-600 text-white">
+                  <tr>
+                    <th class="px-6 py-4 text-left font-semibold">Student Name</th>
+                    <th class="px-6 py-4 text-left font-semibold">Roll Number</th>
+                    <th class="px-6 py-4 text-left font-semibold">Attendance Status</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                  ${students.map((s, i) => {
+                    const existing = attendance.find(a => a.student_id === s.id);
+                    const status = existing ? existing.status : 'present';
+                    return `
+                      <tr class="hover:bg-purple-50 transition ${i % 2 === 0 ? 'bg-gray-50' : 'bg-white'}">
+                        <td class="px-6 py-4 font-medium text-gray-900">${s.name}</td>
+                        <td class="px-6 py-4 text-gray-600">${s.roll}</td>
+                        <td class="px-6 py-4">
+                          <div class="flex flex-wrap gap-4">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                              <input type="radio" name="status-${s.id}" value="present" ${status === 'present' ? 'checked' : ''} 
+                                     class="w-4 h-4 text-green-600 focus:ring-green-500">
+                              <span class="text-green-700 flex items-center gap-1">
+                                <i class="fas fa-check-circle"></i> Present
+                              </span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                              <input type="radio" name="status-${s.id}" value="late" ${status === 'late' ? 'checked' : ''}
+                                     class="w-4 h-4 text-yellow-600 focus:ring-yellow-500">
+                              <span class="text-yellow-700 flex items-center gap-1">
+                                <i class="fas fa-clock"></i> Late
+                              </span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                              <input type="radio" name="status-${s.id}" value="absent" ${status === 'absent' ? 'checked' : ''}
+                                     class="w-4 h-4 text-red-600 focus:ring-red-500">
+                              <span class="text-red-700 flex items-center gap-1">
+                                <i class="fas fa-times-circle"></i> Absent
+                              </span>
+                            </label>
+                          </div>
+                        </td>
+                      </tr>
+                    `;
+                  }).join('')}
+                </tbody>
+              </table>
+            </div>
+            <div class="bg-gray-50 px-6 py-4 flex flex-wrap gap-3 border-t-2 border-gray-200">
+              <button type="submit" 
+                      class="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-8 py-3 rounded-lg hover:from-purple-600 hover:to-purple-700 transition shadow-lg font-semibold flex items-center gap-2">
+                <i class="fas fa-save"></i> Submit Attendance
+              </button>
+              <button type="button" 
+                      onclick="markAll('present')" 
+                      class="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition flex items-center gap-2">
+                <i class="fas fa-check-double"></i> Mark All Present
+              </button>
+              <button type="button" 
+                      onclick="markAll('absent')" 
+                      class="bg-red-500 text-white px-6 py-3 rounded-lg hover:bg-red-600 transition flex items-center gap-2">
+                <i class="fas fa-user-times"></i> Mark All Absent
+              </button>
+            </div>
+          </form>
+        `;
+      } catch (error) {
+        console.error('Error loading attendance table:', error);
+        showToast('Failed to load attendance table', 'error');
+      }
+    }
+
+    /**
+     * Mark all students with the same status
+     */
+    function markAll(status) {
+      document.querySelectorAll(`input[type="radio"][value="${status}"]`).forEach(radio => {
+        radio.checked = true;
+      });
+      showToast(`All students marked as ${status}`, 'info');
+    }
+
+    /**
+     * Submit attendance records
+     */
+    async function submitAttendance(event) {
+      event.preventDefault();
+      
+      const classId = document.getElementById('attendance-class').value;
+      const date = document.getElementById('attendance-date').value;
+      const form = event.target;
+      
+      try {
+        const studentsRes = await fetch(`${API_URL}/students/${classId}`);
+        const students = await studentsRes.json();
+        
+        const records = students.map(s => ({
+          student_id: s.id,
+          status: form.querySelector(`input[name="status-${s.id}"]:checked`).value
+        }));
+        
+        const response = await fetch(`${API_URL}/attendance`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ class_id: classId, date, records })
+        });
+        
+        if (response.ok) {
+          showToast('✓ Attendance submitted successfully!');
+          await Promise.all([loadDashboard(), showAttendanceTable()]);
+        } else {
+          const error = await response.json();
+          showToast(error.error || 'Failed to submit attendance', 'error');
+        }
+      } catch (error) {
+        console.error('Error submitting attendance:', error);
+        showToast('Failed to submit attendance', 'error');
+      }
+    }
+
+    // ============================================
+    // STATISTICS FUNCTIONS
+    // ============================================
+    
+    /**
+     * Load statistics dropdown data
+     */
+    async function loadStatisticsData() {
+      try {
+        const [studentsRes, classesRes] = await Promise.all([
+          fetch(`${API_URL}/students`),
+          fetch(`${API_URL}/classes`)
+        ]);
+        
+        const students = await studentsRes.json();
+        const classes = await classesRes.json();
+        
+        // Populate student dropdown
+        const studentSelect = document.getElementById('stats-student');
+        studentSelect.innerHTML = '<option value="">Select Student</option>' +
+          students.map(s => {
+            const className = classes.find(c => c.id === s.class_id)?.name || 'Unknown';
+            return `<option value="${s.id}">${s.name} (${className})</option>`;
+          }).join('');
+        
+        // Populate class filter dropdown
+        const classSelect = document.getElementById('stats-class');
+        classSelect.innerHTML = '<option value="">All Classes</option>' +
+          classes.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+          
+      } catch (error) {
+        console.error('Error loading statistics data:', error);
+        showToast('Failed to load statistics data', 'error');
+      }
+    }
+    
+    /**
+     * Load and display student statistics
+     */
+    async function loadStudentStatistics() {
+      const studentId = document.getElementById('stats-student').value;
+      const classFilter = document.getElementById('stats-class').value;
+      const container = document.getElementById('student-statistics');
+      
+      if (!studentId) {
+        container.innerHTML = `
+          <p class="text-gray-400 text-center py-8">
+            <i class="fas fa-user-graduate text-3xl mb-2 block"></i>
+            Select a student to view their attendance statistics
+          </p>
+        `;
+        return;
+      }
+      
+      try {
+        container.innerHTML = '<div class="flex justify-center py-8"><i class="fas fa-spinner fa-spin text-3xl text-purple-600"></i></div>';
+        
+        const [studentsRes, classesRes, attendanceRes] = await Promise.all([
+          fetch(`${API_URL}/students`),
+          fetch(`${API_URL}/classes`),
+          fetch(`${API_URL}/attendance`)
+        ]);
+        
+        const students = await studentsRes.json();
+        const classes = await classesRes.json();
+        const allAttendance = await attendanceRes.json();
+        
+        const student = students.find(s => s.id === parseInt(studentId));
+        if (!student) {
+          container.innerHTML = '<p class="text-red-500 text-center py-4">Student not found</p>';
+          return;
+        }
+        
+        // Filter attendance for this student
+        let studentAttendance = allAttendance.filter(a => a.student_id === parseInt(studentId));
+        
+        // Apply class filter if selected
+        if (classFilter) {
+          studentAttendance = studentAttendance.filter(a => a.class_id === parseInt(classFilter));
+        }
+        
+        // Group by class
+        const attendanceByClass = {};
+        studentAttendance.forEach(record => {
+          if (!attendanceByClass[record.class_id]) {
+            attendanceByClass[record.class_id] = [];
+          }
+          attendanceByClass[record.class_id].push(record);
+        });
+        
+        // Calculate statistics for each class
+        const classStats = Object.entries(attendanceByClass).map(([classId, records]) => {
+          const className = classes.find(c => c.id === parseInt(classId))?.name || 'Unknown';
+          const present = records.filter(r => r.status === 'present').length;
+          const late = records.filter(r => r.status === 'late').length;
+          const absent = records.filter(r => r.status === 'absent').length;
+          const total = records.length;
+          const attendanceRate = total > 0 ? ((present + late) / total * 100).toFixed(1) : 0;
+          
+          return {
+            classId,
+            className,
+            present,
+            late,
+            absent,
+            total,
+            attendanceRate,
+            records: records.sort((a, b) => new Date(a.date) - new Date(b.date))
+          };
+        });
+        
+        if (classStats.length === 0) {
+          container.innerHTML = `
+            <p class="text-gray-400 text-center py-8">
+              <i class="fas fa-inbox text-3xl mb-2 block"></i>
+              No attendance records found for ${student.name}
+            </p>
+          `;
+          return;
+        }
+        
+        // Generate HTML with charts
+        let html = `
+          <div class="mb-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-2">
+              <i class="fas fa-user-circle text-purple-600"></i> ${student.name}
+            </h3>
+            <p class="text-gray-600">Roll: ${student.roll}</p>
+          </div>
+        `;
+        
+        // Overall summary cards
+        const totalPresent = classStats.reduce((sum, s) => sum + s.present, 0);
+        const totalLate = classStats.reduce((sum, s) => sum + s.late, 0);
+        const totalAbsent = classStats.reduce((sum, s) => sum + s.absent, 0);
+        const totalRecords = classStats.reduce((sum, s) => sum + s.total, 0);
+        const overallRate = totalRecords > 0 ? ((totalPresent + totalLate) / totalRecords * 100).toFixed(1) : 0;
+        
+        html += `
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-gradient-to-br from-green-500 to-green-600 text-white rounded-lg p-4 text-center">
+              <div class="text-3xl font-bold">${totalPresent}</div>
+              <div class="text-sm opacity-90">Present</div>
+            </div>
+            <div class="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white rounded-lg p-4 text-center">
+              <div class="text-3xl font-bold">${totalLate}</div>
+              <div class="text-sm opacity-90">Late</div>
+            </div>
+            <div class="bg-gradient-to-br from-red-500 to-red-600 text-white rounded-lg p-4 text-center">
+              <div class="text-3xl font-bold">${totalAbsent}</div>
+              <div class="text-sm opacity-90">Absent</div>
+            </div>
+            <div class="bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-lg p-4 text-center">
+              <div class="text-3xl font-bold">${overallRate}%</div>
+              <div class="text-sm opacity-90">Attendance Rate</div>
+            </div>
+          </div>
+        `;
+        
+        // Individual class statistics with charts
+        classStats.forEach((stat, index) => {
+          const chartId = `chart-${stat.classId}`;
+          
+          html += `
+            <div class="bg-gray-50 rounded-lg p-6 mb-6">
+              <h4 class="text-lg font-bold text-gray-800 mb-4">
+                <i class="fas fa-school text-blue-600"></i> ${stat.className}
+              </h4>
+              
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Summary Stats -->
+                <div>
+                  <div class="grid grid-cols-2 gap-3 mb-4">
+                    <div class="bg-white rounded p-3 border-l-4 border-green-500">
+                      <div class="text-2xl font-bold text-green-600">${stat.present}</div>
+                      <div class="text-xs text-gray-600">Present</div>
+                    </div>
+                    <div class="bg-white rounded p-3 border-l-4 border-yellow-500">
+                      <div class="text-2xl font-bold text-yellow-600">${stat.late}</div>
+                      <div class="text-xs text-gray-600">Late</div>
+                    </div>
+                    <div class="bg-white rounded p-3 border-l-4 border-red-500">
+                      <div class="text-2xl font-bold text-red-600">${stat.absent}</div>
+                      <div class="text-xs text-gray-600">Absent</div>
+                    </div>
+                    <div class="bg-white rounded p-3 border-l-4 border-purple-500">
+                      <div class="text-2xl font-bold text-purple-600">${stat.attendanceRate}%</div>
+                      <div class="text-xs text-gray-600">Rate</div>
+                    </div>
+                  </div>
+                  
+                  <!-- Pie Chart -->
+                  <div class="bg-white rounded p-4">
+                    <canvas id="${chartId}-pie" style="max-height: 200px;"></canvas>
+                  </div>
+                </div>
+                
+                <!-- Timeline Chart -->
+                <div class="bg-white rounded p-4">
+                  <h5 class="font-semibold text-gray-700 mb-3">Attendance Timeline</h5>
+                  <canvas id="${chartId}-timeline" style="max-height: 200px;"></canvas>
+                </div>
+              </div>
+            </div>
+          `;
+        });
+        
+        container.innerHTML = html;
+        
+        // Create charts for each class
+        classStats.forEach(stat => {
+          // Pie chart
+          const pieCtx = document.getElementById(`chart-${stat.classId}-pie`);
+          if (pieCtx) {
+            new Chart(pieCtx, {
+              type: 'doughnut',
+              data: {
+                labels: ['Present', 'Late', 'Absent'],
+                datasets: [{
+                  data: [stat.present, stat.late, stat.absent],
+                  backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
+                  borderWidth: 2,
+                  borderColor: '#fff'
+                }]
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                aspectRatio: 1.5,
+                plugins: {
+                  legend: {
+                    position: 'bottom'
+                  },
+                  title: {
+                    display: true,
+                    text: 'Status Distribution'
+                  }
+                }
+              }
+            });
+          }
+          
+          // Timeline chart
+          const timelineCtx = document.getElementById(`chart-${stat.classId}-timeline`);
+          if (timelineCtx && stat.records.length > 0) {
+            const dates = stat.records.map(r => r.date);
+            const statusValues = stat.records.map(r => {
+              if (r.status === 'present') return 2;
+              if (r.status === 'late') return 1;
+              return 0;
+            });
+            
+            new Chart(timelineCtx, {
+              type: 'line',
+              data: {
+                labels: dates,
+                datasets: [{
+                  label: 'Attendance Status',
+                  data: statusValues,
+                  borderColor: '#8b5cf6',
+                  backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                  tension: 0.3,
+                  fill: true,
+                  pointRadius: 5,
+                  pointHoverRadius: 7,
+                  pointBackgroundColor: statusValues.map(v => 
+                    v === 2 ? '#10b981' : v === 1 ? '#f59e0b' : '#ef4444'
+                  )
+                }]
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                aspectRatio: 2,
+                scales: {
+                  y: {
+                    beginAtZero: true,
+                    max: 2,
+                    ticks: {
+                      stepSize: 1,
+                      callback: function(value) {
+                        return ['Absent', 'Late', 'Present'][value] || '';
+                      }
+                    }
+                  },
+                  x: {
+                    ticks: {
+                      maxRotation: 45,
+                      minRotation: 45
+                    }
+                  }
+                },
+                plugins: {
+                  legend: {
+                    display: false
+                  },
+                  tooltip: {
+                    callbacks: {
+                      label: function(context) {
+                        const status = ['Absent', 'Late', 'Present'][context.parsed.y];
+                        return status || '';
+                      }
+                    }
+                  }
+                }
+              }
+            });
+          }
+        });
+        
+      } catch (error) {
+        console.error('Error loading student statistics:', error);
+        container.innerHTML = '<p class="text-red-500 text-center py-4">Error loading statistics</p>';
+        showToast('Failed to load statistics', 'error');
+      }
+    }
+
+    // ============================================
+    // APPLICATION INITIALIZATION
+    // ============================================
+    
+    /**
+     * Initialize the application
+     */
+    async function initializeApp() {
+      console.log('🚀 Initializing Attendance Tracker Pro...');
+      
+      try {
+        // Test backend connection
+        const response = await fetch(`${API_URL}/test`);
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log('✓ Backend connected:', data.message);
+          updateConnectionStatus(true);
+          
+          // Load all initial data
+          await Promise.all([
+            loadDashboard(),
+            loadClasses(),
+            loadAttendanceForm()
+          ]);
+          
+          // Load students if a class is pre-selected
+          await loadStudents();
+          
+          console.log('✓ Application initialized successfully');
+        } else {
+          throw new Error('Backend returned error status');
+        }
+      } catch (error) {
+        console.error('✗ Initialization failed:', error);
+        updateConnectionStatus(false);
+        showToast('Failed to connect to backend server. Please ensure the server is running.', 'error');
+        
+        // Show error state in dashboard
+        document.getElementById('dashboard-stats').innerHTML = `
+          <div class="bg-red-50 border-2 border-red-200 rounded-xl p-6 text-center">
+            <i class="fas fa-exclamation-triangle text-red-500 text-4xl mb-3"></i>
+            <h3 class="text-xl font-bold text-red-700 mb-2">Connection Failed</h3>
+            <p class="text-red-600">Unable to connect to the backend server.</p>
+            <p class="text-sm text-red-500 mt-2">Please ensure the server is running on http://127.0.0.1:3002</p>
+            <button onclick="location.reload()" 
+                    class="mt-4 bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600 transition">
+              <i class="fas fa-sync-alt"></i> Retry Connection
+            </button>
+          </div>
+        `;
+      }
+    }
+
+    // Initialize when page loads
+    window.addEventListener('load', initializeApp);
+    
+    console.log('📚 Attendance Tracker Pro loaded');
+  </script>
+  
+</body>
+</html>
