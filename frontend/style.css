@@ -1,3 +1,206 @@
+/* Main styles */
+:root {
+    --primary-color: #4CAF50;
+    --primary-hover: #45a049;
+    --error-color: #f44336;
+    --success-color: #4CAF50;
+    --border-color: #ddd;
+    --background-light: #f9f9f9;
+}
+
 body {
-  font-family: 'Inter', sans-serif;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 20px;
+    background-color: #f5f5f5;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    background-color: white;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 40px;
+    font-size: 2.5em;
+}
+
+.section {
+    margin-bottom: 40px;
+    padding: 20px;
+    background-color: var(--background-light);
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+h2 {
+    color: #444;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--primary-color);
+}
+
+/* Form styles */
+.form-group {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+input[type="text"],
+input[type="date"],
+select {
+    padding: 10px 15px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 16px;
+    flex: 1;
+    min-width: 200px;
+    transition: border-color 0.3s;
+}
+
+input[type="text"]:focus,
+input[type="date"]:focus,
+select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.1);
+}
+
+button {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: var(--primary-hover);
+}
+
+button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+/* List styles */
+.class-item, .student-item {
+    background-color: white;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: transform 0.2s;
+}
+
+.class-item:hover, .student-item:hover {
+    transform: translateX(5px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Attendance table styles */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background-color: white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+th, td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+th {
+    background-color: var(--primary-color);
+    color: white;
+    font-weight: 500;
+}
+
+tr:nth-child(even) {
+    background-color: var(--background-light);
+}
+
+.attendance-cell {
+    cursor: pointer;
+    text-transform: capitalize;
+    text-align: center;
+    font-weight: 500;
+    transition: background-color 0.3s;
+}
+
+.attendance-cell.present {
+    background-color: rgba(76, 175, 80, 0.1);
+    color: var(--success-color);
+}
+
+.attendance-cell.absent {
+    background-color: rgba(244, 67, 54, 0.1);
+    color: var(--error-color);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .container {
+        padding: 15px;
+    }
+
+    .form-group {
+        flex-direction: column;
+    }
+
+    input[type="text"],
+    input[type="date"],
+    select,
+    button {
+        width: 100%;
+        min-width: unset;
+    }
+
+    th, td {
+        padding: 8px 10px;
+        font-size: 14px;
+    }
+}
+
+/* Loading and error states */
+.loading {
+    text-align: center;
+    padding: 20px;
+    color: #666;
+}
+
+.error-message {
+    color: var(--error-color);
+    background-color: rgba(244, 67, 54, 0.1);
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+}
+
+/* Success message */
+.success-message {
+    color: var(--success-color);
+    background-color: rgba(76, 175, 80, 0.1);
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 10px;
 }

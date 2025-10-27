@@ -3,19 +3,279 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Attendance Tracker</title>
+  <title>Attendance Tracker Pro</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style-enhanced.css" />
+  <style>
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .slide-in { animation: slideIn 0.3s ease-out; }
+    .hover-scale { transition: transform 0.2s; }
+    .hover-scale:hover { transform: scale(1.02); }
+    .gradient-bg {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    .glass-effect {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+    }
+  </style>
 </head>
-<body class="bg-slate-50 text-slate-800">
-  <div id="app" class="container mx-auto py-8">
-    <h1 class="text-3xl font-bold mb-4">Attendance Tracker Dashboard</h1>
-    <div id="dashboard"></div>
-    <hr class="my-8"/>
-    <div id="attendance"></div>
+<body class="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 min-h-screen">
+  <!-- Status Banner -->
+  <div id="status-banner" class="bg-gradient-to-r from-green-500 to-green-600 text-white p-3 text-center shadow-lg">
+    <div class="container mx-auto flex items-center justify-center gap-4">
+      <i class="fas fa-circle-check"></i>
+      <span id="connection-status">Connected to Backend</span>
+      <span class="text-xs opacity-80">Last updated: <span id="last-update-time">--:--</span></span>
+    </div>
   </div>
+  
+  <!-- Navigation -->
+  <nav class="gradient-bg text-white shadow-xl">
+    <div class="container mx-auto px-6 py-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <i class="fas fa-graduation-cap text-3xl"></i>
+          <div>
+            <h1 class="text-2xl font-bold">Attendance Tracker Pro</h1>
+            <p class="text-xs opacity-90">Manage classes, students & attendance effortlessly</p>
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="refreshAllData()" class="px-4 py-2 bg-white bg-opacity-20 rounded-lg hover:bg-opacity-30 transition flex items-center gap-2">
+            <i class="fas fa-sync-alt"></i> Refresh
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+  
+  <div id="app" class="container mx-auto px-6 py-8">
+    
+    <!-- Dashboard Stats -->
+    <div id="dashboard" class="mb-8">
+      <div class="glass-effect rounded-xl shadow-2xl p-6">
+        <div class="flex items-center gap-2 mb-4">
+          <i class="fas fa-chart-line text-purple-600 text-xl"></i>
+          <h2 class="text-2xl font-bold text-gray-800">Dashboard Overview</h2>
+        </div>
+        <div id="dashboard-content">
+          <div class="flex justify-center items-center py-12">
+            <div class="text-center">
+              <i class="fas fa-spinner fa-spin text-4xl text-purple-600 mb-4"></i>
+              <p class="text-gray-600">Loading dashboard...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+      <!-- Class Management -->
+      <div id="class-management" class="glass-effect rounded-xl shadow-2xl p-6 hover-scale">
+        <div class="flex items-center gap-2 mb-4">
+          <i class="fas fa-school text-blue-600 text-xl"></i>
+          <h2 class="text-2xl font-bold text-gray-800">Classes</h2>
+          <span id="class-badge" class="ml-auto bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-sm font-semibold">0</span>
+        </div>
+        <div class="mb-4">
+          <div class="flex gap-2">
+            <input type="text" id="className" placeholder="Enter class name (e.g., Math 101)" 
+                   class="flex-1 px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none transition"
+                   onkeypress="if(event.key==='Enter') addClass()"/>
+            <button onclick="addClass()" 
+                    class="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition shadow-lg flex items-center gap-2">
+              <i class="fas fa-plus"></i> Add
+            </button>
+          </div>
+        </div>
+        <div id="classesList" class="max-h-96 overflow-y-auto space-y-2">
+          <div class="text-gray-500 text-center py-4">Loading classes...</div>
+        </div>
+      </div>
+
+      <!-- Student Management -->
+      <div id="student-management" class="glass-effect rounded-xl shadow-2xl p-6 hover-scale">
+        <div class="flex items-center gap-2 mb-4">
+          <i class="fas fa-user-graduate text-green-600 text-xl"></i>
+          <h2 class="text-2xl font-bold text-gray-800">Students</h2>
+          <span id="student-badge" class="ml-auto bg-green-100 text-green-600 px-3 py-1 rounded-full text-sm font-semibold">0</span>
+        </div>
+        <div class="space-y-3 mb-4">
+          <input type="text" id="studentName" placeholder="Student name" 
+                 class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-green-500 focus:outline-none transition"/>
+          <div class="grid grid-cols-2 gap-3">
+            <input type="text" id="studentRoll" placeholder="Roll number" 
+                   class="px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-green-500 focus:outline-none transition"/>
+            <select id="studentClass" onchange="loadStudents()" 
+                    class="px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-green-500 focus:outline-none transition">
+              <option value="">Select Class</option>
+            </select>
+          </div>
+          <button onclick="addStudent()" 
+                  class="w-full bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition shadow-lg flex items-center justify-center gap-2">
+            <i class="fas fa-user-plus"></i> Add Student
+          </button>
+        </div>
+        <div id="studentsList" class="max-h-96 overflow-y-auto space-y-2">
+          <div class="text-gray-500 text-center py-4">Select a class to view students</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Attendance Section -->
+    <div class="glass-effect rounded-xl shadow-2xl p-6">
+      <div class="flex items-center gap-2 mb-4">
+        <i class="fas fa-clipboard-check text-purple-600 text-xl"></i>
+        <h2 class="text-2xl font-bold text-gray-800">Mark Attendance</h2>
+      </div>
+      <div id="attendance">
+        <div class="text-gray-500 text-center py-4">Loading attendance section...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="fixed top-20 right-6 z-50 space-y-2"></div>
+
+  <!-- Loading Overlay -->
+  <div id="loading-overlay" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-xl p-8 text-center">
+      <i class="fas fa-spinner fa-spin text-5xl text-purple-600 mb-4"></i>
+      <p class="text-xl font-semibold text-gray-800">Processing...</p>
+    </div>
+  </div>
+  
   <script src="dashboard.js"></script>
-  <script src="attendance.js"></script>
+  <script src="attendance-new.js"></script>
+  <script>
+    // Global utility functions
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      const icons = {
+        success: 'fa-check-circle text-green-500',
+        error: 'fa-exclamation-circle text-red-500',
+        info: 'fa-info-circle text-blue-500',
+        warning: 'fa-exclamation-triangle text-yellow-500'
+      };
+      const bgColors = {
+        success: 'bg-green-50 border-green-200',
+        error: 'bg-red-50 border-red-200',
+        info: 'bg-blue-50 border-blue-200',
+        warning: 'bg-yellow-50 border-yellow-200'
+      };
+      
+      toast.className = `${bgColors[type]} border-2 rounded-lg p-4 shadow-lg slide-in flex items-center gap-3 min-w-80`;
+      toast.innerHTML = `
+        <i class="fas ${icons[type]} text-xl"></i>
+        <span class="flex-1 font-medium">${message}</span>
+        <button onclick="this.parentElement.remove()" class="text-gray-400 hover:text-gray-600">
+          <i class="fas fa-times"></i>
+        </button>
+      `;
+      container.appendChild(toast);
+      setTimeout(() => toast.remove(), 5000);
+    }
+
+    function showLoading() {
+      document.getElementById('loading-overlay').classList.remove('hidden');
+      document.getElementById('loading-overlay').classList.add('flex');
+    }
+
+    function hideLoading() {
+      document.getElementById('loading-overlay').classList.add('hidden');
+      document.getElementById('loading-overlay').classList.remove('flex');
+    }
+
+    function updateConnectionStatus(connected) {
+      const banner = document.getElementById('status-banner');
+      const status = document.getElementById('connection-status');
+      if (connected) {
+        banner.className = 'bg-gradient-to-r from-green-500 to-green-600 text-white p-3 text-center shadow-lg';
+        status.innerHTML = '<i class="fas fa-circle-check"></i> Connected to Backend';
+      } else {
+        banner.className = 'bg-gradient-to-r from-red-500 to-red-600 text-white p-3 text-center shadow-lg';
+        status.innerHTML = '<i class="fas fa-circle-xmark"></i> Backend Connection Failed';
+      }
+    }
+
+    function updateLastUpdateTime() {
+      const now = new Date();
+      document.getElementById('last-update-time').textContent = now.toLocaleTimeString();
+    }
+
+    async function refreshAllData() {
+      showToast('Refreshing data...', 'info');
+      await Promise.all([loadClasses(), renderAttendance()]);
+      if (typeof fetchStats === 'function') {
+        await fetchStats();
+      }
+      updateLastUpdateTime();
+      showToast('Data refreshed successfully!', 'success');
+    }
+
+    // Single initialization point
+    async function initializeApp() {
+      console.log('=== Initializing Attendance Tracker Pro ===');
+      
+      try {
+        // Test backend connection
+        const response = await fetch('http://127.0.0.1:3002/api/test');
+        const data = await response.json();
+        updateConnectionStatus(true);
+        console.log('Backend connected:', data);
+        
+        // Load all data - call functions directly
+        console.log('Loading all data...');
+        
+        // Check if functions exist
+        if (typeof fetchStats !== 'function') {
+          console.error('fetchStats not defined!');
+        }
+        if (typeof loadClasses !== 'function') {
+          console.error('loadClasses not defined!');
+        }
+        if (typeof renderAttendance !== 'function') {
+          console.error('renderAttendance not defined!');
+        }
+        
+        // Load data sequentially to avoid race conditions
+        if (typeof fetchStats === 'function') {
+          await fetchStats();
+        }
+        if (typeof loadClasses === 'function') {
+          await loadClasses();
+        }
+        if (typeof renderAttendance === 'function') {
+          await renderAttendance();
+        }
+        
+        updateLastUpdateTime();
+        console.log('=== App Initialized Successfully ===');
+        
+      } catch (error) {
+        console.error('Initialization error:', error);
+        updateConnectionStatus(false);
+        showToast('Failed to connect to backend server', 'error');
+      }
+    }
+
+    // Initialize when DOM is ready - use a timeout to ensure scripts are loaded
+    window.addEventListener('load', () => {
+      console.log('Window loaded, waiting for scripts...');
+      setTimeout(initializeApp, 100);
+    });
+
+    // Auto-refresh every 30 seconds
+    setInterval(updateLastUpdateTime, 30000);
+  </script>
 </body>
 </html>
