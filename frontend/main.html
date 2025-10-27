@@ -30,9 +30,19 @@
   
   <!-- Connection Status Banner -->
   <div id="status-banner" class="bg-gradient-to-r from-green-500 to-green-600 text-white p-3 text-center shadow-lg transition-all">
-    <div class="container mx-auto flex items-center justify-center gap-4">
+    <div class="container mx-auto flex items-center justify-center gap-4 flex-wrap">
       <i class="fas fa-circle-check"></i>
       <span id="connection-status">Connecting to Backend...</span>
+      <span class="text-xs opacity-80">|</span>
+      <span class="text-xs opacity-90">
+        <i class="fas fa-clock mr-1"></i>
+        Last updated: <span id="last-update-time">--:--:--</span>
+      </span>
+      <span class="text-xs opacity-80">|</span>
+      <span class="text-xs opacity-90">
+        <i class="fas fa-calendar mr-1"></i>
+        <span id="current-date">Loading...</span>
+      </span>
     </div>
   </div>
   
@@ -268,6 +278,8 @@
       if (connected) {
         banner.className = 'bg-gradient-to-r from-green-500 to-green-600 text-white p-3 text-center shadow-lg transition-all';
         status.innerHTML = '<i class="fas fa-circle-check"></i> Connected to Backend';
+        // Update the time when connection status changes
+        updateDateTime();
       } else {
         banner.className = 'bg-gradient-to-r from-red-500 to-red-600 text-white p-3 text-center shadow-lg transition-all';
         status.innerHTML = '<i class="fas fa-circle-xmark"></i> Backend Connection Failed';
@@ -1037,6 +1049,44 @@
     }
 
     // ============================================
+    // DATE AND TIME UPDATES
+    // ============================================
+    
+    /**
+     * Update current date and time display
+     */
+    function updateDateTime() {
+      const now = new Date();
+      
+      // Update time (HH:MM:SS)
+      const timeString = now.toLocaleTimeString('en-US', { 
+        hour12: false,
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+      const timeElement = document.getElementById('last-update-time');
+      if (timeElement) {
+        timeElement.textContent = timeString;
+      }
+      
+      // Update date (Day, Month DD, YYYY)
+      const dateString = now.toLocaleDateString('en-US', { 
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+      });
+      const dateElement = document.getElementById('current-date');
+      if (dateElement) {
+        dateElement.textContent = dateString;
+      }
+    }
+    
+    // Update time every second
+    setInterval(updateDateTime, 1000);
+    
+    // ============================================
     // APPLICATION INITIALIZATION
     // ============================================
     
@@ -1044,6 +1094,9 @@
      * Initialize the application
      */
     async function initializeApp() {
+      // Initialize date/time display
+      updateDateTime();
+      
       console.log('🚀 Initializing Attendance Tracker Pro...');
       
       try {
