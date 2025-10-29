@@ -112,9 +112,9 @@ app.use((req, res, next) => {
     next();
 });
 
-// Configure CORS with more specific settings
+// Configure CORS to allow access from any origin (for mobile access)
 app.use(cors({
-    origin: ['http://127.0.0.1:3000', 'http://localhost:3000'],
+    origin: true, // Allow all origins for mobile access
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true,
     allowedHeaders: ['Content-Type', 'Accept']
@@ -692,9 +692,18 @@ async function startServer() {
         await initializeDb();
         console.log('Database initialized successfully');
 
-        app.listen(PORT, '127.0.0.1', () => {
-            console.log(`Server is running on http://127.0.0.1:${PORT}`);
-            console.log('Ready to accept requests');
+        // Listen on all network interfaces (0.0.0.0) to allow mobile access
+        app.listen(PORT, '0.0.0.0', () => {
+            console.log(`\n${'='.repeat(60)}`);
+            console.log(`  ATTENDANCE TRACKER BACKEND SERVER`);
+            console.log(`${'='.repeat(60)}`);
+            console.log(`  Status: RUNNING ✓`);
+            console.log(`  Port: ${PORT}`);
+            console.log(`\n  Access URLs:`);
+            console.log(`  - Local:    http://127.0.0.1:${PORT}`);
+            console.log(`  - Network:  http://<YOUR-IP>:${PORT}`);
+            console.log(`${'='.repeat(60)}\n`);
+            console.log('Ready to accept requests from all devices...');
         });
     } catch (error) {
         console.error('Server startup failed:', error);

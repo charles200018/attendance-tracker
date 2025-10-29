@@ -1,0 +1,50 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment variables
+.env
+.env.local
+.env.production
+
+# Database files (using temp directory instead)
+*.json
+!package.json
+!package-lock.json
+
+# Build outputs
+dist/
+build/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.old
+
+# Backup and cleanup documentation
+CLEANUP-GUIDE.md
+CLEANUP-SCRIPT.ps1
+COMPLETE-CLEANUP-SUMMARY.md
+FINAL-CLEANUP-GUIDE.md
+PROJECT-DOCUMENTATION.md
+README-SIMPLE.md
+PORTABLE-PACKAGE/
+
+# Deployment guide (keep if needed for reference)
+# DEPLOYMENT-GUIDE.md
