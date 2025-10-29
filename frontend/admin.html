@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - Attendance Tracker</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .slide-in { animation: slideIn 0.3s ease-out; }
+    .hover-scale { transition: transform 0.2s ease; }
+    .hover-scale:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+  </style>
+</head>
+
+<body class="bg-gradient-to-br from-gray-900 via-purple-900 to-indigo-900 min-h-screen">
+
+  <!-- Header -->
+  <header class="bg-gradient-to-r from-red-600 to-pink-600 text-white shadow-2xl">
+    <div class="container mx-auto px-6 py-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <i class="fas fa-shield-alt text-3xl"></i>
+          <div>
+            <h1 class="text-2xl font-bold">Admin Dashboard</h1>
+            <p class="text-xs opacity-90" id="admin-name">System Administrator</p>
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="refreshData()" 
+                  class="px-4 py-2 bg-white bg-opacity-20 rounded-lg hover:bg-opacity-30 transition">
+            <i class="fas fa-sync-alt mr-2"></i>Refresh
+          </button>
+          <button onclick="logout()" type="button"
+                  class="px-4 py-2 bg-red-700 bg-opacity-80 rounded-lg hover:bg-opacity-100 transition">
+            <i class="fas fa-sign-out-alt mr-2"></i>Logout
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <div class="container mx-auto px-4 md:px-6 py-8">
+
+    <!-- System Statistics Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div class="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl p-6 shadow-lg hover-scale">
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="text-sm opacity-90 mb-1">Total Users</div>
+            <div class="text-4xl font-bold" id="stat-users">0</div>
+          </div>
+          <i class="fas fa-users text-5xl opacity-20"></i>
+        </div>
+      </div>
+      
+      <div class="bg-gradient-to-br from-green-500 to-green-600 text-white rounded-xl p-6 shadow-lg hover-scale">
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="text-sm opacity-90 mb-1">Total Students</div>
+            <div class="text-4xl font-bold" id="stat-students">0</div>
+          </div>
+          <i class="fas fa-user-graduate text-5xl opacity-20"></i>
+        </div>
+      </div>
+      
+      <div class="bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-xl p-6 shadow-lg hover-scale">
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="text-sm opacity-90 mb-1">Activity Logs</div>
+            <div class="text-4xl font-bold" id="stat-logs">0</div>
+          </div>
+          <i class="fas fa-history text-5xl opacity-20"></i>
+        </div>
+      </div>
+      
+      <div class="bg-gradient-to-br from-red-500 to-red-600 text-white rounded-xl p-6 shadow-lg hover-scale">
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="text-sm opacity-90 mb-1">Failed Logins</div>
+            <div class="text-4xl font-bold" id="stat-failed">0</div>
+          </div>
+          <i class="fas fa-exclamation-triangle text-5xl opacity-20"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="bg-white rounded-xl shadow-lg mb-6 p-4">
+      <div class="flex gap-2 flex-wrap">
+        <button onclick="showTab('activity')" id="tab-activity"
+                class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition">
+          <i class="fas fa-history mr-2"></i>Activity Logs
+        </button>
+        <button onclick="showTab('users')" id="tab-users"
+                class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
+          <i class="fas fa-users-cog mr-2"></i>All Users
+        </button>
+        <button onclick="showTab('classes')" id="tab-classes"
+                class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
+          <i class="fas fa-school mr-2"></i>Classes
+        </button>
+        <button onclick="showTab('students')" id="tab-students"
+                class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
+          <i class="fas fa-user-graduate mr-2"></i>Students
+        </button>
+        <button onclick="showTab('attendance')" id="tab-attendance"
+                class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
+          <i class="fas fa-clipboard-check mr-2"></i>Attendance
+        </button>
+        <button onclick="showTab('system')" id="tab-system"
+                class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
+          <i class="fas fa-server mr-2"></i>System Info
+        </button>
+      </div>
+    </div>
+
+    <!-- Activity Logs Tab -->
+    <div id="content-activity" class="slide-in">
+      <div class="bg-white rounded-xl shadow-lg p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-2xl font-bold text-gray-800">
+            <i class="fas fa-history text-purple-600 mr-2"></i>Activity Logs
+          </h2>
+          <button onclick="clearLogs()" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition">
+            <i class="fas fa-trash mr-2"></i>Clear Logs
+          </button>
+        </div>
+        
+        <div class="overflow-x-auto">
+          <table class="min-w-full">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Timestamp</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Username</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">IP Address</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Details</th>
+              </tr>
+            </thead>
+            <tbody id="activity-table" class="bg-white divide-y divide-gray-200">
+              <tr><td colspan="5" class="px-6 py-4 text-center text-gray-500">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Users Tab -->
+    <div id="content-users" class="hidden slide-in">
+      <div class="bg-white rounded-xl shadow-lg p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-2xl font-bold text-gray-800">
+            <i class="fas fa-users-cog text-purple-600 mr-2"></i>All User Accounts
+          </h2>
+          <button onclick="addNewUser()" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition">
+            <i class="fas fa-plus mr-2"></i>Add User
+          </button>
+        </div>
+        
+        <div class="overflow-x-auto">
+          <table class="min-w-full">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Username</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Password</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Student ID</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="users-table" class="bg-white divide-y divide-gray-200">
+              <tr><td colspan="7" class="px-6 py-4 text-center text-gray-500">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- System Info Tab -->
+    <div id="content-system" class="hidden slide-in">
+      <div class="bg-white rounded-xl shadow-lg p-6">
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">
+          <i class="fas fa-server text-purple-600 mr-2"></i>System Information
+        </h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="border rounded-lg p-4">
+            <h3 class="font-bold text-lg mb-3 text-purple-600">Database Statistics</h3>
+            <div class="space-y-2 text-sm">
+              <div class="flex justify-between">
+                <span class="text-gray-600">Total Classes:</span>
+                <span class="font-semibold" id="sys-classes">0</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-600">Total Students:</span>
+                <span class="font-semibold" id="sys-students">0</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-600">Total Attendance Records:</span>
+                <span class="font-semibold" id="sys-attendance">0</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-600">Total Users:</span>
+                <span class="font-semibold" id="sys-users">0</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="border rounded-lg p-4">
+            <h3 class="font-bold text-lg mb-3 text-purple-600">Users by Role</h3>
+            <div class="space-y-2 text-sm">
+              <div class="flex justify-between">
+                <span class="text-gray-600">Administrators:</span>
+                <span class="font-semibold text-red-600" id="sys-admin">0</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-600">Teachers:</span>
+                <span class="font-semibold text-blue-600" id="sys-teacher">0</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-600">Students:</span>
+                <span class="font-semibold text-green-600" id="sys-student">0</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="mt-6 border rounded-lg p-4">
+          <h3 class="font-bold text-lg mb-3 text-purple-600">Recent Activity (Last 10)</h3>
+          <div id="recent-activity" class="space-y-2 max-h-96 overflow-y-auto">
+            <p class="text-gray-500">Loading...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Classes Tab -->
+    <div id="content-classes" class="hidden slide-in">
+      <div class="bg-white rounded-xl shadow-lg p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-2xl font-bold text-gray-800">
+            <i class="fas fa-school text-purple-600 mr-2"></i>All Classes
+          </h2>
+          <button onclick="addClass()" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition">
+            <i class="fas fa-plus mr-2"></i>Add Class
+          </button>
+        </div>
+        
+        <div class="overflow-x-auto">
+          <table class="min-w-full">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Class Name</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Student Count</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="classes-table" class="bg-white divide-y divide-gray-200">
+              <tr><td colspan="4" class="px-6 py-4 text-center text-gray-500">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Students Tab -->
+    <div id="content-students" class="hidden slide-in">
+      <div class="bg-white rounded-xl shadow-lg p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-2xl font-bold text-gray-800">
+            <i class="fas fa-user-graduate text-purple-600 mr-2"></i>All Students
+          </h2>
+          <button onclick="addStudent()" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition">
+            <i class="fas fa-plus mr-2"></i>Add Student
+          </button>
+        </div>
+        
+        <div class="overflow-x-auto">
+          <table class="min-w-full">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Roll Number</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Class ID</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Class Name</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="students-table-admin" class="bg-white divide-y divide-gray-200">
+              <tr><td colspan="6" class="px-6 py-4 text-center text-gray-500">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Attendance Tab -->
+    <div id="content-attendance" class="hidden slide-in">
+      <div class="bg-white rounded-xl shadow-lg p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-2xl font-bold text-gray-800">
+            <i class="fas fa-clipboard-check text-purple-600 mr-2"></i>All Attendance Records
+          </h2>
+          <button onclick="addAttendance()" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition">
+            <i class="fas fa-plus mr-2"></i>Add Record
+          </button>
+        </div>
+        
+        <div class="mb-4 flex gap-4 flex-wrap">
+          <select id="filter-class" onchange="filterAttendance()" 
+                  class="px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none">
+            <option value="">All Classes</option>
+          </select>
+          <select id="filter-student" onchange="filterAttendance()" 
+                  class="px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none">
+            <option value="">All Students</option>
+          </select>
+          <select id="filter-status" onchange="filterAttendance()" 
+                  class="px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none">
+            <option value="">All Status</option>
+            <option value="present">Present</option>
+            <option value="late">Late</option>
+            <option value="absent">Absent</option>
+          </select>
+        </div>
+        
+        <div class="overflow-x-auto">
+          <table class="min-w-full">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Student</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Class</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Timestamp</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="attendance-table-admin" class="bg-white divide-y divide-gray-200">
+              <tr><td colspan="7" class="px-6 py-4 text-center text-gray-500">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const API_URL = 'http://127.0.0.1:3002/api';
+    let currentUser = null;
+    let allClasses = [];
+    let allStudents = [];
+    let allAttendance = [];
+
+    // Check authentication
+    function checkAuth() {
+      const userData = localStorage.getItem('currentUser');
+      if (!userData) {
+        window.location.href = 'login.html';
+        return null;
+      }
+      
+      const user = JSON.parse(userData);
+      if (user.role !== 'admin') {
+        alert('Access denied. Admin privileges required.');
+        window.location.href = 'login.html';
+        return null;
+      }
+      
+      return user;
+    }
+
+    // Logout
+    function logout() {
+      console.log('Admin logout');
+      localStorage.removeItem('currentUser');
+      window.location.href = 'login.html';
+    }
+
+    // Tab management
+    function showTab(tabName) {
+      // Update buttons
+      document.querySelectorAll('[id^="tab-"]').forEach(btn => {
+        btn.className = 'px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition';
+      });
+      document.getElementById(`tab-${tabName}`).className = 'px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition';
+      
+      // Update content
+      document.querySelectorAll('[id^="content-"]').forEach(div => {
+        div.classList.add('hidden');
+      });
+      document.getElementById(`content-${tabName}`).classList.remove('hidden');
+    }
+
+    // Load admin data
+    async function loadAdminData() {
+      try {
+        const [statsRes, logsRes, usersRes] = await Promise.all([
+          fetch(`${API_URL}/admin/stats`),
+          fetch(`${API_URL}/admin/activity-logs`),
+          fetch(`${API_URL}/admin/users`)
+        ]);
+
+        const stats = await statsRes.json();
+        const logs = await logsRes.json();
+        const users = await usersRes.json();
+
+        // Update statistics
+        document.getElementById('stat-users').textContent = stats.totalUsers;
+        document.getElementById('stat-students').textContent = stats.totalStudents;
+        document.getElementById('stat-logs').textContent = stats.totalActivityLogs;
+        const failedLogins = logs.filter(l => l.type === 'login_failed').length;
+        document.getElementById('stat-failed').textContent = failedLogins;
+
+        // Update system info
+        document.getElementById('sys-classes').textContent = stats.totalClasses;
+        document.getElementById('sys-students').textContent = stats.totalStudents;
+        document.getElementById('sys-attendance').textContent = stats.totalAttendance;
+        document.getElementById('sys-users').textContent = stats.totalUsers;
+        document.getElementById('sys-admin').textContent = stats.usersByRole.admin;
+        document.getElementById('sys-teacher').textContent = stats.usersByRole.teacher;
+        document.getElementById('sys-student').textContent = stats.usersByRole.student;
+
+        // Load activity logs
+        loadActivityLogs(logs);
+        
+        // Load users
+        loadUsers(users);
+        
+        // Load recent activity
+        loadRecentActivity(stats.recentActivity);
+
+      } catch (error) {
+        console.error('Error loading admin data:', error);
+        alert('Failed to load admin data');
+      }
+    }
+
+    // Load activity logs table
+    function loadActivityLogs(logs) {
+      const tbody = document.getElementById('activity-table');
+      
+      if (!logs || logs.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-4 text-center text-gray-500">No activity logs found</td></tr>';
+        return;
+      }
+
+      const sortedLogs = [...logs].reverse(); // Show newest first
+      
+      tbody.innerHTML = sortedLogs.map(log => {
+        const statusColors = {
+          login_success: 'bg-green-100 text-green-800',
+          login_failed: 'bg-red-100 text-red-800'
+        };
+        
+        const timestamp = new Date(log.timestamp).toLocaleString('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit'
+        });
+        
+        return `
+          <tr class="hover:bg-gray-50">
+            <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">${timestamp}</td>
+            <td class="px-6 py-4">
+              <span class="px-3 py-1 rounded-full text-xs font-semibold ${statusColors[log.type] || 'bg-gray-100 text-gray-800'}">
+                ${log.type.replace('_', ' ').toUpperCase()}
+              </span>
+            </td>
+            <td class="px-6 py-4 text-sm text-gray-900">${log.username}</td>
+            <td class="px-6 py-4 text-sm text-gray-500 font-mono">${log.ipAddress || 'N/A'}</td>
+            <td class="px-6 py-4 text-sm text-gray-600">${log.details}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // Load users table
+    function loadUsers(users) {
+      const tbody = document.getElementById('users-table');
+      
+      if (!users || users.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-4 text-center text-gray-500">No users found</td></tr>';
+        return;
+      }
+
+      const roleColors = {
+        admin: 'bg-red-100 text-red-800',
+        teacher: 'bg-blue-100 text-blue-800',
+        student: 'bg-green-100 text-green-800'
+      };
+
+      tbody.innerHTML = users.map(user => `
+        <tr class="hover:bg-gray-50">
+          <td class="px-6 py-4 text-sm text-gray-900">${user.id}</td>
+          <td class="px-6 py-4 text-sm font-mono text-gray-900 editable" contenteditable="true" data-id="${user.id}" data-field="username">${user.username}</td>
+          <td class="px-6 py-4 text-sm font-mono text-gray-600 editable" contenteditable="true" data-id="${user.id}" data-field="password">${user.password}</td>
+          <td class="px-6 py-4">
+            <select class="text-xs px-2 py-1 rounded-full font-semibold ${roleColors[user.role]} border-0" data-id="${user.id}" data-field="role" onchange="updateUserField(${user.id}, 'role', this.value)">
+              <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>ADMIN</option>
+              <option value="teacher" ${user.role === 'teacher' ? 'selected' : ''}>TEACHER</option>
+              <option value="student" ${user.role === 'student' ? 'selected' : ''}>STUDENT</option>
+            </select>
+          </td>
+          <td class="px-6 py-4 text-sm text-gray-900 editable" contenteditable="true" data-id="${user.id}" data-field="name">${user.name}</td>
+          <td class="px-6 py-4 text-sm text-gray-500 editable" contenteditable="true" data-id="${user.id}" data-field="student_id">${user.student_id || '-'}</td>
+          <td class="px-6 py-4 text-sm">
+            <button onclick="saveUserChanges(${user.id})" class="text-green-600 hover:text-green-800 mr-2" title="Save">
+              <i class="fas fa-save"></i>
+            </button>
+            <button onclick="deleteUser(${user.id})" class="text-red-600 hover:text-red-800" title="Delete">
+              <i class="fas fa-trash"></i>
+            </button>
+          </td>
+        </tr>
+      `).join('');
+      
+      // Add blur event to editable cells
+      document.querySelectorAll('.editable').forEach(cell => {
+        cell.addEventListener('blur', function() {
+          const id = this.dataset.id;
+          const field = this.dataset.field;
+          const value = this.textContent === '-' ? null : this.textContent;
+          updateUserField(id, field, value);
+        });
+      });
+    }
+
+    // Load recent activity
+    function loadRecentActivity(recentActivity) {
+      const container = document.getElementById('recent-activity');
+      
+      if (!recentActivity || recentActivity.length === 0) {
+        container.innerHTML = '<p class="text-gray-500">No recent activity</p>';
+        return;
+      }
+
+      container.innerHTML = recentActivity.map(log => {
+        const icon = log.type === 'login_success' ? 'fa-check-circle text-green-600' : 'fa-times-circle text-red-600';
+        const time = new Date(log.timestamp).toLocaleString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+        
+        return `
+          <div class="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+            <i class="fas ${icon} mt-1"></i>
+            <div class="flex-1">
+              <p class="text-sm font-semibold text-gray-900">${log.username}</p>
+              <p class="text-xs text-gray-600">${log.details}</p>
+              <p class="text-xs text-gray-400 mt-1">${time} • ${log.ipAddress || 'Unknown IP'}</p>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Clear activity logs
+    async function clearLogs() {
+      if (!confirm('Are you sure you want to clear all activity logs? This cannot be undone.')) {
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_URL}/admin/activity-logs`, {
+          method: 'DELETE'
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          alert('Activity logs cleared successfully');
+          refreshData();
+        } else {
+          alert('Failed to clear logs');
+        }
+      } catch (error) {
+        console.error('Error clearing logs:', error);
+        alert('Failed to clear logs');
+      }
+    }
+
+    // Refresh data
+    function refreshData() {
+      loadAdminData();
+      loadApplicationData();
+    }
+
+    // Load application data (classes, students, attendance)
+    async function loadApplicationData() {
+      try {
+        const [classesRes, studentsRes, attendanceRes] = await Promise.all([
+          fetch(`${API_URL}/classes`),
+          fetch(`${API_URL}/students`),
+          fetch(`${API_URL}/attendance`)
+        ]);
+
+        allClasses = await classesRes.json();
+        allStudents = await studentsRes.json();
+        allAttendance = await attendanceRes.json();
+
+        loadClasses();
+        loadStudentsAdmin();
+        loadAttendanceAdmin();
+        populateFilters();
+
+      } catch (error) {
+        console.error('Error loading application data:', error);
+      }
+    }
+
+    // Load classes table
+    function loadClasses() {
+      const tbody = document.getElementById('classes-table');
+      
+      if (!allClasses || allClasses.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="px-6 py-4 text-center text-gray-500">No classes found</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = allClasses.map(cls => {
+        const studentCount = allStudents.filter(s => s.class_id === cls.id).length;
+        return `
+          <tr class="hover:bg-gray-50">
+            <td class="px-6 py-4 text-sm text-gray-900">${cls.id}</td>
+            <td class="px-6 py-4 text-sm font-semibold text-gray-900 editable" contenteditable="true" data-id="${cls.id}" data-field="name" onblur="updateClass(${cls.id}, this.textContent)">${cls.name}</td>
+            <td class="px-6 py-4 text-sm text-gray-600">${studentCount} students</td>
+            <td class="px-6 py-4 text-sm">
+              <button onclick="deleteClass(${cls.id})" class="text-red-600 hover:text-red-800" title="Delete">
+                <i class="fas fa-trash"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // Load students table
+    function loadStudentsAdmin() {
+      const tbody = document.getElementById('students-table-admin');
+      
+      if (!allStudents || allStudents.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-4 text-center text-gray-500">No students found</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = allStudents.map(student => {
+        const studentClass = allClasses.find(c => c.id === student.class_id);
+        return `
+          <tr class="hover:bg-gray-50">
+            <td class="px-6 py-4 text-sm text-gray-900">${student.id}</td>
+            <td class="px-6 py-4 text-sm font-semibold text-gray-900 editable" contenteditable="true" data-id="${student.id}" data-field="name" onblur="updateStudent(${student.id})">${student.name}</td>
+            <td class="px-6 py-4 text-sm text-gray-600 font-mono editable" contenteditable="true" data-id="${student.id}" data-field="roll" onblur="updateStudent(${student.id})">${student.roll}</td>
+            <td class="px-6 py-4 text-sm text-gray-600 editable" contenteditable="true" data-id="${student.id}" data-field="class_id" onblur="updateStudent(${student.id})">${student.class_id}</td>
+            <td class="px-6 py-4 text-sm text-gray-600">${studentClass ? studentClass.name : 'N/A'}</td>
+            <td class="px-6 py-4 text-sm">
+              <button onclick="deleteStudent(${student.id})" class="text-red-600 hover:text-red-800" title="Delete">
+                <i class="fas fa-trash"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // Load attendance table
+    function loadAttendanceAdmin() {
+      const tbody = document.getElementById('attendance-table-admin');
+      
+      if (!allAttendance || allAttendance.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-4 text-center text-gray-500">No attendance records found</td></tr>';
+        return;
+      }
+
+      const sortedAttendance = [...allAttendance].sort((a, b) => {
+        return new Date(b.timestamp) - new Date(a.timestamp);
+      });
+
+      tbody.innerHTML = sortedAttendance.map(record => {
+        const student = allStudents.find(s => s.id === record.student_id);
+        const studentClass = allClasses.find(c => c.id === record.class_id);
+        
+        const date = new Date(record.date).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric'
+        });
+        
+        const timestamp = new Date(record.timestamp).toLocaleString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+        
+        return `
+          <tr class="hover:bg-gray-50" data-class="${record.class_id}" data-student="${record.student_id}" data-status="${record.status}">
+            <td class="px-6 py-4 text-sm text-gray-900">${record.id}</td>
+            <td class="px-6 py-4 text-sm text-gray-900">${date}</td>
+            <td class="px-6 py-4 text-sm text-gray-900">${student ? student.name : 'Unknown'}</td>
+            <td class="px-6 py-4 text-sm text-gray-600">${studentClass ? studentClass.name : 'Unknown'}</td>
+            <td class="px-6 py-4">
+              <select class="px-2 py-1 border rounded text-xs" data-id="${record.id}" data-field="status" onchange="updateAttendance(${record.id}, 'status', this.value)">
+                <option value="present" ${record.status === 'present' ? 'selected' : ''}>Present</option>
+                <option value="late" ${record.status === 'late' ? 'selected' : ''}>Late</option>
+                <option value="absent" ${record.status === 'absent' ? 'selected' : ''}>Absent</option>
+              </select>
+            </td>
+            <td class="px-6 py-4 text-sm text-gray-500">${timestamp}</td>
+            <td class="px-6 py-4 text-sm text-gray-900">
+              <button onclick="deleteAttendance(${record.id})" class="text-red-600 hover:text-red-800">
+                <i class="fas fa-trash"></i> Delete
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // Populate filter dropdowns
+    function populateFilters() {
+      const classFilter = document.getElementById('filter-class');
+      const studentFilter = document.getElementById('filter-student');
+      
+      // Populate class filter
+      classFilter.innerHTML = '<option value="">All Classes</option>' + 
+        allClasses.map(cls => `<option value="${cls.id}">${cls.name}</option>`).join('');
+      
+      // Populate student filter
+      studentFilter.innerHTML = '<option value="">All Students</option>' + 
+        allStudents.map(student => `<option value="${student.id}">${student.name}</option>`).join('');
+    }
+
+    // Filter attendance records
+    function filterAttendance() {
+      const classId = document.getElementById('filter-class').value;
+      const studentId = document.getElementById('filter-student').value;
+      const status = document.getElementById('filter-status').value;
+      
+      const rows = document.querySelectorAll('#attendance-table-admin tr[data-class]');
+      
+      rows.forEach(row => {
+        const matchClass = !classId || row.getAttribute('data-class') === classId;
+        const matchStudent = !studentId || row.getAttribute('data-student') === studentId;
+        const matchStatus = !status || row.getAttribute('data-status') === status;
+        
+        if (matchClass && matchStudent && matchStatus) {
+          row.style.display = '';
+        } else {
+          row.style.display = 'none';
+        }
+      });
+    }
+
+    // ============ USER MANAGEMENT FUNCTIONS ============
+    async function updateUserField(id, field, value) {
+      try {
+        const response = await fetch(`http://localhost:3002/api/admin/users/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ field, value })
+        });
+        
+        if (response.ok) {
+          console.log(`User ${id} ${field} updated to ${value}`);
+        } else {
+          alert('Failed to update user');
+          loadApplicationData(); // Reload to revert changes
+        }
+      } catch (error) {
+        console.error('Error updating user:', error);
+        alert('Error updating user');
+        loadApplicationData();
+      }
+    }
+
+    async function deleteUser(id) {
+      if (!confirm('Are you sure you want to delete this user?')) return;
+      
+      try {
+        const response = await fetch(`http://localhost:3002/api/admin/users/${id}`, {
+          method: 'DELETE'
+        });
+        
+        if (response.ok) {
+          alert('User deleted successfully');
+          loadApplicationData();
+        } else {
+          alert('Failed to delete user');
+        }
+      } catch (error) {
+        console.error('Error deleting user:', error);
+        alert('Error deleting user');
+      }
+    }
+
+    async function addNewUser() {
+      const username = prompt('Enter username:');
+      if (!username) return;
+      
+      const password = prompt('Enter password:');
+      if (!password) return;
+      
+      const name = prompt('Enter full name:');
+      if (!name) return;
+      
+      const role = prompt('Enter role (admin/teacher/student):');
+      if (!['admin', 'teacher', 'student'].includes(role)) {
+        alert('Invalid role');
+        return;
+      }
+      
+      const student_id = role === 'student' ? prompt('Enter student ID:') : '';
+      
+      try {
+        const response = await fetch('http://localhost:3002/api/admin/users', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password, name, role, student_id })
+        });
+        
+        if (response.ok) {
+          alert('User added successfully');
+          loadApplicationData();
+        } else {
+          const error = await response.json();
+          alert('Failed to add user: ' + (error.message || 'Unknown error'));
+        }
+      } catch (error) {
+        console.error('Error adding user:', error);
+        alert('Error adding user');
+      }
+    }
+
+    // ============ CLASS MANAGEMENT FUNCTIONS ============
+    async function updateClass(id, name) {
+      try {
+        const response = await fetch(`http://localhost:3002/api/classes/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name })
+        });
+        
+        if (response.ok) {
+          console.log(`Class ${id} updated to ${name}`);
+          loadApplicationData(); // Reload to update student count
+        } else {
+          alert('Failed to update class');
+          loadApplicationData();
+        }
+      } catch (error) {
+        console.error('Error updating class:', error);
+        alert('Error updating class');
+        loadApplicationData();
+      }
+    }
+
+    async function deleteClass(id) {
+      if (!confirm('Are you sure? This will affect students in this class.')) return;
+      
+      try {
+        const response = await fetch(`http://localhost:3002/api/classes/${id}`, {
+          method: 'DELETE'
+        });
+        
+        if (response.ok) {
+          alert('Class deleted successfully');
+          loadApplicationData();
+        } else {
+          alert('Failed to delete class');
+        }
+      } catch (error) {
+        console.error('Error deleting class:', error);
+        alert('Error deleting class');
+      }
+    }
+
+    async function addClass() {
+      const name = prompt('Enter class name:');
+      if (!name) return;
+      
+      try {
+        const response = await fetch('http://localhost:3002/api/classes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name })
+        });
+        
+        if (response.ok) {
+          alert('Class added successfully');
+          loadApplicationData();
+        } else {
+          alert('Failed to add class');
+        }
+      } catch (error) {
+        console.error('Error adding class:', error);
+        alert('Error adding class');
+      }
+    }
+
+    // ============ STUDENT MANAGEMENT FUNCTIONS ============
+    async function updateStudent(id) {
+      const row = event.target.closest('tr');
+      const name = row.querySelector('[data-field="name"]').textContent;
+      const roll = row.querySelector('[data-field="roll"]').textContent;
+      const class_id = row.querySelector('[data-field="class_id"]').value;
+      
+      try {
+        const response = await fetch(`http://localhost:3002/api/students/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, roll, class_id: parseInt(class_id) })
+        });
+        
+        if (response.ok) {
+          console.log(`Student ${id} updated`);
+          loadApplicationData();
+        } else {
+          alert('Failed to update student');
+          loadApplicationData();
+        }
+      } catch (error) {
+        console.error('Error updating student:', error);
+        alert('Error updating student');
+        loadApplicationData();
+      }
+    }
+
+    async function deleteStudent(id) {
+      if (!confirm('Are you sure? This will also delete attendance records.')) return;
+      
+      try {
+        const response = await fetch(`http://localhost:3002/api/students/${id}`, {
+          method: 'DELETE'
+        });
+        
+        if (response.ok) {
+          alert('Student deleted successfully');
+          loadApplicationData();
+        } else {
+          alert('Failed to delete student');
+        }
+      } catch (error) {
+        console.error('Error deleting student:', error);
+        alert('Error deleting student');
+      }
+    }
+
+    async function addStudent() {
+      const name = prompt('Enter student name:');
+      if (!name) return;
+      
+      const roll = prompt('Enter roll number:');
+      if (!roll) return;
+      
+      const class_id = prompt('Enter class ID:');
+      if (!class_id) return;
+      
+      try {
+        const response = await fetch('http://localhost:3002/api/students', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, roll, class_id: parseInt(class_id) })
+        });
+        
+        if (response.ok) {
+          alert('Student added successfully');
+          loadApplicationData();
+        } else {
+          alert('Failed to add student');
+        }
+      } catch (error) {
+        console.error('Error adding student:', error);
+        alert('Error adding student');
+      }
+    }
+
+    // ============ ATTENDANCE MANAGEMENT FUNCTIONS ============
+    async function updateAttendance(id, field, value) {
+      try {
+        const response = await fetch(`http://localhost:3002/api/attendance/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ field, value })
+        });
+        
+        if (response.ok) {
+          console.log(`Attendance ${id} ${field} updated to ${value}`);
+        } else {
+          alert('Failed to update attendance');
+          loadApplicationData();
+        }
+      } catch (error) {
+        console.error('Error updating attendance:', error);
+        alert('Error updating attendance');
+        loadApplicationData();
+      }
+    }
+
+    async function deleteAttendance(id) {
+      if (!confirm('Are you sure you want to delete this attendance record?')) return;
+      
+      try {
+        const response = await fetch(`http://localhost:3002/api/attendance/${id}`, {
+          method: 'DELETE'
+        });
+        
+        if (response.ok) {
+          alert('Attendance record deleted successfully');
+          loadApplicationData();
+        } else {
+          alert('Failed to delete attendance record');
+        }
+      } catch (error) {
+        console.error('Error deleting attendance:', error);
+        alert('Error deleting attendance record');
+      }
+    }
+
+    async function addAttendance() {
+      const student_id = prompt('Enter student ID:');
+      if (!student_id) return;
+      
+      const class_id = prompt('Enter class ID:');
+      if (!class_id) return;
+      
+      const status = prompt('Enter status (present/late/absent):');
+      if (!['present', 'late', 'absent'].includes(status)) {
+        alert('Invalid status');
+        return;
+      }
+      
+      const date = prompt('Enter date (YYYY-MM-DD):', new Date().toISOString().split('T')[0]);
+      if (!date) return;
+      
+      try {
+        const response = await fetch('http://localhost:3002/api/attendance', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            student_id: parseInt(student_id), 
+            class_id: parseInt(class_id), 
+            status, 
+            date 
+          })
+        });
+        
+        if (response.ok) {
+          alert('Attendance record added successfully');
+          loadApplicationData();
+        } else {
+          alert('Failed to add attendance record');
+        }
+      } catch (error) {
+        console.error('Error adding attendance:', error);
+        alert('Error adding attendance record');
+      }
+    }
+
+
+    // Initialize
+    window.addEventListener('load', () => {
+      currentUser = checkAuth();
+      if (currentUser) {
+        document.getElementById('admin-name').textContent = currentUser.name;
+        loadAdminData();
+        loadApplicationData();
+      }
+    });
+
+    console.log('🔐 Admin dashboard loaded');
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Attendance - Student View</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .slide-in { animation: slideIn 0.3s ease-out; }
+  </style>
+</head>
+
+<body class="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 min-h-screen">
+  
+  <!-- Header -->
+  <header class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-xl">
+    <div class="container mx-auto px-6 py-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <i class="fas fa-user-graduate text-3xl"></i>
+          <div>
+            <h1 class="text-2xl font-bold">Student Portal</h1>
+            <p class="text-xs opacity-90" id="student-name">Loading...</p>
+          </div>
+        </div>
+        <button onclick="logout()" type="button"
+                class="px-4 py-2 bg-red-500 bg-opacity-80 rounded-lg hover:bg-opacity-100 transition flex items-center gap-2">
+          <i class="fas fa-sign-out-alt"></i>
+          <span>Logout</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <div class="container mx-auto px-4 md:px-6 py-8">
+    
+    <!-- Welcome Card -->
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-6 slide-in">
+      <h2 class="text-2xl font-bold text-gray-800 mb-2">
+        <i class="fas fa-chart-line text-purple-600 mr-2"></i>
+        My Attendance Overview
+      </h2>
+      <p class="text-gray-600">View your attendance records and statistics</p>
+    </div>
+    
+    <!-- Statistics Cards -->
+    <div id="stats-cards" class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+      <!-- Will be populated by JavaScript -->
+    </div>
+    
+    <!-- Charts Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+      <!-- Status Distribution -->
+      <div class="bg-white rounded-xl shadow-lg p-6">
+        <h3 class="text-lg font-bold text-gray-800 mb-4">
+          <i class="fas fa-chart-pie text-purple-600 mr-2"></i>
+          Attendance Distribution
+        </h3>
+        <canvas id="status-chart" style="max-height: 300px;"></canvas>
+      </div>
+      
+      <!-- Timeline -->
+      <div class="bg-white rounded-xl shadow-lg p-6">
+        <h3 class="text-lg font-bold text-gray-800 mb-4">
+          <i class="fas fa-chart-line text-indigo-600 mr-2"></i>
+          Attendance Timeline (Last 30 Days)
+        </h3>
+        <canvas id="timeline-chart" style="max-height: 300px;"></canvas>
+      </div>
+    </div>
+    
+    <!-- Attendance Records Table -->
+    <div class="bg-white rounded-xl shadow-lg p-6">
+      <h3 class="text-lg font-bold text-gray-800 mb-4">
+        <i class="fas fa-table text-purple-600 mr-2"></i>
+        Attendance Records
+      </h3>
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead>
+            <tr class="bg-gray-50">
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Class</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Time</th>
+            </tr>
+          </thead>
+          <tbody id="attendance-records">
+            <tr>
+              <td colspan="4" class="px-6 py-8 text-center text-gray-400">
+                <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                <p>Loading attendance records...</p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+  </div>
+
+  <script>
+    const API_URL = 'http://127.0.0.1:3002/api';
+    let currentUser = null;
+    let statusChart = null;
+    let timelineChart = null;
+    
+    // Check authentication
+    function checkAuth() {
+      const userData = localStorage.getItem('currentUser');
+      if (!userData) {
+        window.location.href = 'login.html';
+        return null;
+      }
+      
+      const user = JSON.parse(userData);
+      if (user.role !== 'student') {
+        alert('Access denied. This page is for students only.');
+        window.location.href = 'login.html';
+        return null;
+      }
+      
+      return user;
+    }
+    
+    // Logout function
+    function logout() {
+      console.log('Logout clicked');
+      localStorage.removeItem('currentUser');
+      console.log('User removed from localStorage');
+      window.location.href = 'login.html';
+    }
+    
+    // Load student data
+    async function loadStudentData() {
+      try {
+        // Update student name from current user
+        document.getElementById('student-name').textContent = currentUser.name || 'Student';
+        
+        const [classesRes, studentsRes, attendanceRes] = await Promise.all([
+          fetch(`${API_URL}/classes`),
+          fetch(`${API_URL}/students`),
+          fetch(`${API_URL}/attendance`)
+        ]);
+        
+        const classes = await classesRes.json();
+        const students = await studentsRes.json();
+        const allAttendance = await attendanceRes.json();
+        
+        // Find student record
+        const student = students.find(s => s.id === currentUser.student_id);
+        if (!student) {
+          alert('Student record not found');
+          return;
+        }
+        
+        // Filter attendance for this student
+        const myAttendance = allAttendance.filter(a => a.student_id === currentUser.student_id);
+        
+        // Calculate statistics
+        const present = myAttendance.filter(a => a.status === 'present').length;
+        const late = myAttendance.filter(a => a.status === 'late').length;
+        const absent = myAttendance.filter(a => a.status === 'absent').length;
+        const total = myAttendance.length;
+        const attendanceRate = total > 0 ? Math.round((present / total) * 100) : 0;
+        
+        // Display stats cards
+        document.getElementById('stats-cards').innerHTML = `
+          <div class="bg-gradient-to-br from-green-500 to-green-600 text-white rounded-xl p-6 shadow-lg">
+            <div class="text-3xl font-bold mb-2">${present}</div>
+            <div class="text-sm opacity-90">Present Days</div>
+          </div>
+          <div class="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white rounded-xl p-6 shadow-lg">
+            <div class="text-3xl font-bold mb-2">${late}</div>
+            <div class="text-sm opacity-90">Late Days</div>
+          </div>
+          <div class="bg-gradient-to-br from-red-500 to-red-600 text-white rounded-xl p-6 shadow-lg">
+            <div class="text-3xl font-bold mb-2">${absent}</div>
+            <div class="text-sm opacity-90">Absent Days</div>
+          </div>
+          <div class="bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-xl p-6 shadow-lg">
+            <div class="text-3xl font-bold mb-2">${attendanceRate}%</div>
+            <div class="text-sm opacity-90">Attendance Rate</div>
+          </div>
+        `;
+        
+        // Create status chart
+        createStatusChart(present, late, absent);
+        
+        // Create timeline chart
+        createTimelineChart(myAttendance);
+        
+        // Display attendance records
+        displayAttendanceRecords(myAttendance, classes);
+        
+      } catch (error) {
+        console.error('Error loading data:', error);
+        alert('Failed to load attendance data. Please ensure the server is running.');
+      }
+    }
+    
+    // Create status distribution chart
+    function createStatusChart(present, late, absent) {
+      const ctx = document.getElementById('status-chart').getContext('2d');
+      
+      if (statusChart) statusChart.destroy();
+      
+      statusChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Present', 'Late', 'Absent'],
+          datasets: [{
+            data: [present, late, absent],
+            backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: {
+            legend: { position: 'bottom' }
+          }
+        }
+      });
+    }
+    
+    // Create timeline chart
+    function createTimelineChart(attendance) {
+      const ctx = document.getElementById('timeline-chart').getContext('2d');
+      
+      if (timelineChart) timelineChart.destroy();
+      
+      // Sort by date and get last 30 days
+      const sortedAttendance = [...attendance].sort((a, b) => 
+        new Date(a.date) - new Date(b.date)
+      ).slice(-30);
+      
+      const dates = sortedAttendance.map(a => {
+        const date = new Date(a.date);
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      });
+      
+      const statusValues = sortedAttendance.map(a => {
+        if (a.status === 'present') return 1;
+        if (a.status === 'late') return 0.5;
+        return 0;
+      });
+      
+      timelineChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: dates,
+          datasets: [{
+            label: 'Attendance',
+            data: statusValues,
+            borderColor: '#8b5cf6',
+            backgroundColor: 'rgba(139, 92, 246, 0.1)',
+            tension: 0.4,
+            fill: true
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          scales: {
+            y: {
+              min: 0,
+              max: 1,
+              ticks: {
+                callback: function(value) {
+                  if (value === 1) return 'Present';
+                  if (value === 0.5) return 'Late';
+                  return 'Absent';
+                }
+              }
+            }
+          },
+          plugins: {
+            legend: { display: false }
+          }
+        }
+      });
+    }
+    
+    // Display attendance records table
+    function displayAttendanceRecords(attendance, classes) {
+      const tbody = document.getElementById('attendance-records');
+      
+      if (attendance.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="4" class="px-6 py-8 text-center text-gray-400">
+              <i class="fas fa-inbox text-3xl mb-2"></i>
+              <p>No attendance records found</p>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+      
+      // Sort by date (newest first)
+      const sorted = [...attendance].sort((a, b) => new Date(b.date) - new Date(a.date));
+      
+      tbody.innerHTML = sorted.map(record => {
+        const className = classes.find(c => c.id === record.class_id)?.name || 'Unknown';
+        const statusColors = {
+          present: 'bg-green-100 text-green-800',
+          late: 'bg-yellow-100 text-yellow-800',
+          absent: 'bg-red-100 text-red-800'
+        };
+        const statusIcons = {
+          present: 'fa-check-circle',
+          late: 'fa-clock',
+          absent: 'fa-times-circle'
+        };
+        
+        const date = new Date(record.date).toLocaleDateString('en-US', { 
+          weekday: 'short', 
+          year: 'numeric', 
+          month: 'short', 
+          day: 'numeric' 
+        });
+        
+        const time = new Date(record.timestamp).toLocaleTimeString('en-US', {
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+        
+        return `
+          <tr class="border-b hover:bg-gray-50">
+            <td class="px-6 py-4 text-sm text-gray-900">${date}</td>
+            <td class="px-6 py-4 text-sm text-gray-900">${className}</td>
+            <td class="px-6 py-4">
+              <span class="px-3 py-1 rounded-full text-xs font-semibold ${statusColors[record.status]}">
+                <i class="fas ${statusIcons[record.status]} mr-1"></i>
+                ${record.status.charAt(0).toUpperCase() + record.status.slice(1)}
+              </span>
+            </td>
+            <td class="px-6 py-4 text-sm text-gray-500">${time}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+    
+    // Initialize
+    window.addEventListener('load', async () => {
+      currentUser = checkAuth();
+      if (currentUser) {
+        await loadStudentData();
+      }
+    });
+    
+    console.log('📚 Student view loaded');
+  </script>
+  
+</body>
+</html>

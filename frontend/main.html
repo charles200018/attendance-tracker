@@ -70,6 +70,10 @@
                   class="px-4 py-2 bg-white bg-opacity-20 rounded-lg hover:bg-opacity-30 transition flex items-center gap-2">
             <i class="fas fa-sync-alt"></i> Refresh
           </button>
+          <button onclick="logout()" 
+                  class="px-4 py-2 bg-red-500 bg-opacity-80 rounded-lg hover:bg-opacity-100 transition flex items-center gap-2">
+            <i class="fas fa-sign-out-alt"></i> Logout
+          </button>
         </div>
       </div>
     </div>
@@ -222,6 +226,30 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
     // ============================================
+    // AUTHENTICATION CHECK
+    // ============================================
+    
+    // Check if user is logged in and has teacher role
+    (function checkAuth() {
+      const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+      
+      if (!currentUser) {
+        // Not logged in - redirect to login page
+        window.location.href = 'login.html';
+        return;
+      }
+      
+      if (currentUser.role !== 'teacher') {
+        // Not a teacher - redirect to student view
+        window.location.href = 'student-view.html';
+        return;
+      }
+      
+      // Teacher authenticated - continue loading
+      console.log('Authenticated as teacher:', currentUser.name);
+    })();
+    
+    // ============================================
     // CONFIGURATION
     // ============================================
     const API_URL = 'http://127.0.0.1:3002/api';
@@ -242,6 +270,14 @@
     // ============================================
     // UTILITY FUNCTIONS
     // ============================================
+    
+    /**
+     * Logout function
+     */
+    function logout() {
+      localStorage.removeItem('currentUser');
+      window.location.href = 'login.html';
+    }
     
     /**
      * Display toast notification
