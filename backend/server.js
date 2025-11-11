@@ -4,7 +4,9 @@ const fs = require('fs').promises;
 const fsSync = require('fs');
 const path = require('path');
 const os = require('os');
-const PORT = 3002;
+const bcrypt = require('bcryptjs');
+const auth = require('./auth');
+const PORT = process.env.PORT || 3000;
 
 // Use temp directory to avoid OneDrive sync issues
 const dbPath = path.join(os.tmpdir(), 'attendance-tracker-db.json');
@@ -44,11 +46,12 @@ async function initializeDb() {
                     student_id: student.id
                 }));
                 
-                db.users = [
-                    { id: 1, username: 'admin', password: 'admin123', role: 'admin', name: 'System Administrator' },
-                    { id: 2, username: 'teacher', password: 'teacher123', role: 'teacher', name: 'John Teacher' },
-                    ...studentUsers.map(u => ({ ...u, id: u.id + 1 }))
-                ];
+        // Store hashed passwords for new users
+        db.users = [
+          { id: 1, username: 'admin', password: bcrypt.hashSync('admin123', 10), role: 'admin', name: 'System Administrator' },
+          { id: 2, username: 'teacher', password: bcrypt.hashSync('teacher123', 10), role: 'teacher', name: 'John Teacher' },
+          ...studentUsers.map(u => ({ ...u, id: u.id + 1, password: bcrypt.hashSync('student123', 10) }))
+        ];
                 db.activityLogs = [];
                 fsSync.writeFileSync(dbPath, JSON.stringify(db, null, 2), 'utf8');
                 console.log(`Added ${db.users.length} users to existing database`);
@@ -62,16 +65,16 @@ async function initializeDb() {
             console.log('Database structure is valid');
         } catch (error) {
             console.log('Creating new database file with sample data');
-            const initialData = {
-                users: [
-                    { id: 1, username: 'admin', password: 'admin123', role: 'admin', name: 'System Administrator' },
-                    { id: 2, username: 'teacher', password: 'teacher123', role: 'teacher', name: 'John Teacher' },
-                    { id: 3, username: 'student1', password: 'student123', role: 'student', name: 'John Doe', student_id: 1 },
-                    { id: 4, username: 'student2', password: 'student123', role: 'student', name: 'Jane Smith', student_id: 2 },
-                    { id: 5, username: 'student3', password: 'student123', role: 'student', name: 'Alice Johnson', student_id: 3 },
-                    { id: 6, username: 'student4', password: 'student123', role: 'student', name: 'Bob Williams', student_id: 4 },
-                    { id: 7, username: 'student5', password: 'student123', role: 'student', name: 'Charlie Brown', student_id: 5 }
-                ],
+      const initialData = {
+        users: [
+        { id: 1, username: 'admin', password: bcrypt.hashSync('admin123', 10), role: 'admin', name: 'System Administrator' },
+          { id: 2, username: 'teacher', password: bcrypt.hashSync('teacher123', 10), role: 'teacher', name: 'John Teacher' },
+          { id: 3, username: 'student1', password: bcrypt.hashSync('student123', 10), role: 'student', name: 'John Doe', student_id: 1 },
+          { id: 4, username: 'student2', password: bcrypt.hashSync('student123', 10), role: 'student', name: 'Jane Smith', student_id: 2 },
+          { id: 5, username: 'student3', password: bcrypt.hashSync('student123', 10), role: 'student', name: 'Alice Johnson', student_id: 3 },
+          { id: 6, username: 'student4', password: bcrypt.hashSync('student123', 10), role: 'student', name: 'Bob Williams', student_id: 4 },
+          { id: 7, username: 'student5', password: bcrypt.hashSync('student123', 10), role: 'student', name: 'Charlie Brown', student_id: 5 }
+        ],
                 activityLogs: [],
                 classes: [{ id: 1, name: 'Class A' }],
                 students: [{ id: 1, name: 'John Doe', roll: '101', class_id: 1 }],
@@ -106,6 +109,13 @@ function writeDb(data) {
 
 const app = express();
 
+// Serve frontend static files from sibling frontend directory so app can be hosted on single port
+const frontendPath = path.join(__dirname, '..', 'frontend');
+if (fsSync.existsSync(frontendPath)) {
+  app.use(express.static(frontendPath));
+  console.log('Serving frontend static files from', frontendPath);
+}
+
 // Detailed request logging middleware
 app.use((req, res, next) => {
     console.log(`\n[${new Date().toISOString()}] ${req.method} ${req.url}`);
@@ -136,6 +146,11 @@ app.use((req, res, next) => {
 console.log('Setting up JSON database...');
 
 app.get('/', (req, res) => {
+  // Redirect to login page
+  const loginHtml = path.join(frontendPath, 'login.html');
+  if (fsSync.existsSync(loginHtml)) {
+    return res.sendFile(loginHtml);
+  }
   res.send('Server is running!');
 });
 
@@ -143,6 +158,15 @@ app.get('/', (req, res) => {
 app.get('/api/test', (req, res) => {
   console.log('Test endpoint hit');
   res.json({ status: 'ok', message: 'Connection successful' });
+});
+
+// Fallback: serve frontend for non-API GET requests (SPA support)
+app.get(/^\/(?!api).*/, (req, res, next) => {
+  const mainHtml = path.join(frontendPath, 'main.html');
+  if (fsSync.existsSync(mainHtml)) {
+    return res.sendFile(mainHtml);
+  }
+  next();
 });
 
 // ============================================
@@ -155,40 +179,49 @@ app.post('/api/login', async (req, res) => {
     const { username, password } = req.body;
     const ipAddress = req.ip || req.connection.remoteAddress;
     console.log('Login attempt:', username, 'from', ipAddress);
-    
+
     const db = await readDb();
-    const user = db.users?.find(u => u.username === username && u.password === password);
-    
+    const user = db.users?.find(u => u.username === username);
+
     // Log activity
     const logEntry = {
       id: (db.activityLogs?.length || 0) + 1,
       timestamp: new Date().toISOString(),
-      type: user ? 'login_success' : 'login_failed',
+      type: user ? 'login_attempt' : 'login_failed',
       username: username,
       ipAddress: ipAddress,
-      userAgent: req.get('user-agent'),
-      details: user ? `Successful login as ${user.role}` : `Failed login attempt - Invalid credentials`
+      userAgent: req.get('user-agent')
     };
-    
+
     if (!db.activityLogs) db.activityLogs = [];
+
+    if (!user) {
+      logEntry.details = 'Failed login - user not found';
+      db.activityLogs.push(logEntry);
+      writeDb(db);
+      console.log('Login failed: User not found for', username);
+      return res.status(401).json({ success: false, message: 'Invalid username or password' });
+    }
+
+    const match = await auth.comparePassword(password, user.password);
+    if (!match) {
+      logEntry.details = 'Failed login - incorrect password';
+      db.activityLogs.push(logEntry);
+      writeDb(db);
+      console.log('Login failed: Invalid credentials for', username);
+      return res.status(401).json({ success: false, message: 'Invalid username or password' });
+    }
+
+    // Successful login
+    logEntry.type = 'login_success';
+    logEntry.details = `Successful login as ${user.role}`;
     db.activityLogs.push(logEntry);
     writeDb(db);
-    
-    if (user) {
-      // Don't send password back
-      const { password, ...userWithoutPassword } = user;
-      console.log('Login successful:', username, 'Role:', user.role);
-      res.json({ 
-        success: true, 
-        user: userWithoutPassword 
-      });
-    } else {
-      console.log('Login failed: Invalid credentials for', username);
-      res.status(401).json({ 
-        success: false, 
-        message: 'Invalid username or password' 
-      });
-    }
+
+    const { password: pw, ...userWithoutPassword } = user;
+    const token = auth.signToken(userWithoutPassword);
+    console.log('Login successful:', username, 'Role:', user.role);
+    res.json({ success: true, user: userWithoutPassword, token });
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ error: error.message });
@@ -200,7 +233,7 @@ app.post('/api/login', async (req, res) => {
 // ============================================
 
 // Get all activity logs (admin only)
-app.get('/api/admin/activity-logs', async (req, res) => {
+app.get('/api/admin/activity-logs', auth.verifyTokenMiddleware, auth.requireRole('admin'), async (req, res) => {
   try {
     const db = await readDb();
     res.json(db.activityLogs || []);
@@ -210,7 +243,7 @@ app.get('/api/admin/activity-logs', async (req, res) => {
 });
 
 // Get all users with passwords (admin only)
-app.get('/api/admin/users', async (req, res) => {
+app.get('/api/admin/users', auth.verifyTokenMiddleware, auth.requireRole('admin'), async (req, res) => {
   try {
     const db = await readDb();
     res.json(db.users || []);
@@ -220,7 +253,7 @@ app.get('/api/admin/users', async (req, res) => {
 });
 
 // Get system statistics (admin only)
-app.get('/api/admin/stats', async (req, res) => {
+app.get('/api/admin/stats', auth.verifyTokenMiddleware, auth.requireRole('admin'), async (req, res) => {
   try {
     const db = await readDb();
     const stats = {
@@ -243,7 +276,7 @@ app.get('/api/admin/stats', async (req, res) => {
 });
 
 // Clear activity logs (admin only)
-app.delete('/api/admin/activity-logs', async (req, res) => {
+app.delete('/api/admin/activity-logs', auth.verifyTokenMiddleware, auth.requireRole('admin'), async (req, res) => {
   try {
     const db = await readDb();
     db.activityLogs = [];
@@ -273,6 +306,19 @@ app.get('/api/user/:id', async (req, res) => {
   } catch (error) {
     console.error('Error fetching user:', error);
     res.status(500).json({ error: error.message });
+  }
+});
+
+// Return user info for the authenticated token
+app.get('/api/me', auth.verifyTokenMiddleware, async (req, res) => {
+  try {
+    const db = await readDb();
+    const user = db.users?.find(u => u.id === req.user.id);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    const { password, ...userWithoutPassword } = user;
+    res.json(userWithoutPassword);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 
@@ -375,7 +421,7 @@ app.get('/api/students/:classId', async (req, res) => {
 });
 
 // Attendance endpoints
-app.post('/api/attendance', async (req, res) => {
+app.post('/api/attendance', auth.verifyTokenMiddleware, auth.requireRole(['teacher','admin']), async (req, res) => {
   try {
     const { class_id, date, records } = req.body;
     
@@ -445,6 +491,65 @@ app.get('/api/attendance', async (req, res) => {
   }
 });
 
+// Export attendance as CSV
+app.get('/api/attendance/export', async (req, res) => {
+  try {
+    const { classId, from, to, format } = req.query;
+    const db = await readDb();
+
+    let records = db.attendance || [];
+
+    if (classId) {
+      records = records.filter(r => r.class_id === parseInt(classId));
+    }
+    if (from) {
+      records = records.filter(r => r.date >= from);
+    }
+    if (to) {
+      records = records.filter(r => r.date <= to);
+    }
+
+    // Join with student and class names for readability
+    const studentsById = (db.students || []).reduce((m, s) => (m[s.id] = s, m), {});
+    const classesById = (db.classes || []).reduce((m, c) => (m[c.id] = c, m), {});
+
+    // Support only CSV for now
+    const outFormat = (format || 'csv').toLowerCase();
+    if (outFormat !== 'csv') {
+      return res.status(400).json({ error: 'Only csv format is supported at this time' });
+    }
+
+    const header = ['id','class_id','class_name','student_id','student_name','roll','date','status','timestamp'];
+    const rows = [header.join(',')];
+
+    for (const r of records) {
+      const student = studentsById[r.student_id] || {};
+      const cls = classesById[r.class_id] || {};
+      const row = [
+        r.id,
+        r.class_id,
+        `"${(cls.name || '')}"`,
+        r.student_id,
+        `"${(student.name || '')}"`,
+        `"${(student.roll || '')}"`,
+        r.date,
+        r.status,
+        r.timestamp
+      ];
+      rows.push(row.join(','));
+    }
+
+    const csv = rows.join('\n');
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="attendance_export_${Date.now()}.csv"`);
+    res.send(csv);
+  } catch (error) {
+    console.error('Error exporting attendance:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Get attendance by class and date
 app.get('/api/attendance/:classId/:date', async (req, res) => {
   try {
@@ -481,10 +586,17 @@ app.put('/api/admin/users/:id', async (req, res) => {
     }
     
     // Update the specific field
-    if (field === 'username' || field === 'password' || field === 'name' || field === 'role' || field === 'student_id') {
+    if (field === 'username' || field === 'name' || field === 'role' || field === 'student_id') {
       db.users[userIndex][field] = value;
       writeDb(db);
       res.json({ success: true, user: db.users[userIndex] });
+    } else if (field === 'password') {
+      // Hash the new password before saving
+  const hashed = bcrypt.hashSync(value, 10);
+  db.users[userIndex].password = hashed;
+      writeDb(db);
+      const { password, ...userWithoutPassword } = db.users[userIndex];
+      res.json({ success: true, user: userWithoutPassword });
     } else {
       res.status(400).json({ error: 'Invalid field' });
     }
@@ -527,7 +639,7 @@ app.post('/api/admin/users', async (req, res) => {
     const newUser = {
       id: Math.max(...db.users.map(u => u.id), 0) + 1,
       username,
-      password,
+  password: bcrypt.hashSync(password || 'changeme', 10),
       name,
       role,
       student_id: student_id || ''
@@ -535,7 +647,8 @@ app.post('/api/admin/users', async (req, res) => {
     
     db.users.push(newUser);
     writeDb(db);
-    res.json(newUser);
+    const { password: pw, ...userWithoutPassword } = newUser;
+    res.json(userWithoutPassword);
   } catch (error) {
     console.error('Error creating user:', error);
     res.status(500).json({ error: error.message });
@@ -631,18 +744,19 @@ app.delete('/api/students/:id', async (req, res) => {
 });
 
 // ATTENDANCE MANAGEMENT
-app.put('/api/attendance/:id', async (req, res) => {
+// Protect attendance update
+app.put('/api/attendance/:id', auth.verifyTokenMiddleware, auth.requireRole(['teacher','admin']), async (req, res) => {
   try {
     const attendanceId = parseInt(req.params.id);
     const { field, value } = req.body;
-    
+
     const db = await readDb();
     const attendanceIndex = db.attendance.findIndex(a => a.id === attendanceId);
-    
+
     if (attendanceIndex === -1) {
       return res.status(404).json({ error: 'Attendance record not found' });
     }
-    
+
     if (field === 'status') {
       db.attendance[attendanceIndex].status = value;
       writeDb(db);
@@ -716,3 +830,5 @@ startServer().catch(err => {
     console.error('Fatal error:', err);
     process.exit(1);
 });
+
+// Return user info for the authenticated token (defined later)

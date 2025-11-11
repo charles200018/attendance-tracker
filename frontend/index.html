@@ -228,7 +228,7 @@
       
       try {
         // Test backend connection
-        const response = await fetch('http://127.0.0.1:3002/api/test');
+        const response = await fetch('http://127.0.0.1:3000/api/test');
         const data = await response.json();
         updateConnectionStatus(true);
         console.log('Backend connected:', data);

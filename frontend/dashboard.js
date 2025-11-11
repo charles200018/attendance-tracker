@@ -1,6 +1,6 @@
 // Debug configuration
 const DEBUG = true;
-const API_BASE_URL = "http://127.0.0.1:3002/api";
+const API_BASE_URL = "http://127.0.0.1:3000/api";
 const API_URL = API_BASE_URL;
 
 function debug(...args) {
