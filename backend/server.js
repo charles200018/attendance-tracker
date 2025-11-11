@@ -109,13 +109,6 @@ function writeDb(data) {
 
 const app = express();
 
-// Serve frontend static files from sibling frontend directory so app can be hosted on single port
-const frontendPath = path.join(__dirname, '..', 'frontend');
-if (fsSync.existsSync(frontendPath)) {
-  app.use(express.static(frontendPath));
-  console.log('Serving frontend static files from', frontendPath);
-}
-
 // Detailed request logging middleware
 app.use((req, res, next) => {
     console.log(`\n[${new Date().toISOString()}] ${req.method} ${req.url}`);
@@ -145,14 +138,23 @@ app.use((req, res, next) => {
 
 console.log('Setting up JSON database...');
 
+// Serve frontend static files from sibling frontend directory so app can be hosted on single port
+const frontendPath = path.join(__dirname, '..', 'frontend');
+
+// Root route - serve login page
 app.get('/', (req, res) => {
-  // Redirect to login page
   const loginHtml = path.join(frontendPath, 'login.html');
   if (fsSync.existsSync(loginHtml)) {
     return res.sendFile(loginHtml);
   }
   res.send('Server is running!');
 });
+
+// Serve static files but don't serve index.html at root (we handle that above)
+if (fsSync.existsSync(frontendPath)) {
+  app.use(express.static(frontendPath, { index: false }));
+  console.log('Serving frontend static files from', frontendPath);
+}
 
 // Test endpoint for connection verification
 app.get('/api/test', (req, res) => {
