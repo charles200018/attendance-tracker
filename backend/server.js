@@ -534,27 +534,8 @@ app.get('/api/attendance/export', async (req, res) => {
   }
 });
 
-// Get attendance by class and date
-app.get('/api/attendance/:classId/:date', async (req, res) => {
-  try {
-    const classId = parseInt(req.params.classId);
-    const date = req.params.date;
-    
-    console.log(`Fetching attendance for class ${classId} on ${date}`);
-    
-    const db = await readDb();
-    const records = db.attendance.filter(
-      a => a.class_id === classId && a.date === date
-    );
-    
-    res.json(records);
-  } catch (error) {
-    console.error('Error fetching attendance:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
 // Get attendance eligibility report (75% threshold)
+// NOTE: This route MUST come before /api/attendance/:classId/:date to avoid conflicts
 app.get('/api/attendance/eligibility/:classId?', async (req, res) => {
   try {
     const classIdParam = req.params.classId;
@@ -617,6 +598,27 @@ app.get('/api/attendance/eligibility/:classId?', async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching eligibility report:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get attendance by class and date
+// NOTE: This route comes AFTER /api/attendance/eligibility to avoid route conflicts
+app.get('/api/attendance/:classId/:date', async (req, res) => {
+  try {
+    const classId = parseInt(req.params.classId);
+    const date = req.params.date;
+    
+    console.log(`Fetching attendance for class ${classId} on ${date}`);
+    
+    const db = await readDb();
+    const records = db.attendance.filter(
+      a => a.class_id === classId && a.date === date
+    );
+    
+    res.json(records);
+  } catch (error) {
+    console.error('Error fetching attendance:', error);
     res.status(500).json({ error: error.message });
   }
 });
