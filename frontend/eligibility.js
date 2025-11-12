@@ -7,6 +7,11 @@ async function loadEligibilityReport() {
   try {
     const eligibilityContent = document.getElementById('eligibility-content');
     
+    // Check if API_URL is defined
+    if (typeof API_URL === 'undefined') {
+      throw new Error('API_URL is not defined. Please ensure config.js is loaded.');
+    }
+    
     eligibilityContent.innerHTML = `
       <div class="flex justify-center items-center py-12">
         <div class="text-center">
@@ -18,11 +23,24 @@ async function loadEligibilityReport() {
 
     // Fetch classes for filter dropdown
     const classesResponse = await fetch(`${API_URL}/classes`);
+    if (!classesResponse.ok) {
+      throw new Error(`Failed to fetch classes: ${classesResponse.status} ${classesResponse.statusText}`);
+    }
     const classes = await classesResponse.json();
     
     // Fetch eligibility data for all students
     const response = await fetch(`${API_URL}/attendance/eligibility/all`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch eligibility data: ${response.status} ${response.statusText}`);
+    }
     const data = await response.json();
+    
+    console.log('Eligibility data received:', data);
+    
+    // Validate data structure
+    if (!data || typeof data !== 'object') {
+      throw new Error('Invalid data format received from server');
+    }
     
     renderEligibilityReport(data, classes);
   } catch (error) {
@@ -42,9 +60,23 @@ async function loadEligibilityReport() {
 function renderEligibilityReport(data, classes) {
   const eligibilityContent = document.getElementById('eligibility-content');
   
-  const eligibleCount = data.eligible_count;
-  const atRiskCount = data.at_risk_count;
-  const totalStudents = data.total_students;
+  // Validate data structure
+  if (!data || !data.students || !Array.isArray(data.students)) {
+    eligibilityContent.innerHTML = `
+      <div class="bg-yellow-50 border-2 border-yellow-200 text-yellow-700 px-6 py-4 rounded-xl flex items-center gap-3">
+        <i class="fas fa-info-circle text-2xl"></i>
+        <div>
+          <div class="font-bold">No Data Available</div>
+          <div class="text-sm">No students found in the system. Please add students first.</div>
+        </div>
+      </div>
+    `;
+    return;
+  }
+  
+  const eligibleCount = data.eligible_count || 0;
+  const atRiskCount = data.at_risk_count || 0;
+  const totalStudents = data.total_students || 0;
   const eligiblePercentage = totalStudents > 0 ? Math.round((eligibleCount / totalStudents) * 100) : 0;
   
   eligibilityContent.innerHTML = `
@@ -197,7 +229,7 @@ function renderEligibilityReport(data, classes) {
 }
 
 function renderStudentRows(students) {
-  if (students.length === 0) {
+  if (!students || !Array.isArray(students) || students.length === 0) {
     return `
       <tr>
         <td colspan="10" class="px-6 py-8 text-center text-gray-500">
@@ -319,7 +351,11 @@ async function filterByClass(classId) {
     // You could update the stats cards here if needed
   } catch (error) {
     console.error('Error filtering by class:', error);
-    showToast('Failed to filter students', 'error');
+    if (typeof showToast === 'function') {
+      showToast('Failed to filter students', 'error');
+    } else {
+      alert('Failed to filter students');
+    }
   }
 }
 
@@ -364,10 +400,16 @@ async function exportEligibilityReport() {
     link.click();
     document.body.removeChild(link);
     
-    showToast('Report exported successfully!', 'success');
+    if (typeof showToast === 'function') {
+      showToast('Report exported successfully!', 'success');
+    }
   } catch (error) {
     console.error('Error exporting report:', error);
-    showToast('Failed to export report', 'error');
+    if (typeof showToast === 'function') {
+      showToast('Failed to export report', 'error');
+    } else {
+      alert('Failed to export report: ' + error.message);
+    }
   }
 }
 
