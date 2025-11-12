@@ -10,16 +10,21 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
   <style>
-    /* Refined Color Palette */
+    /* Rolls-Royce Inspired Luxury Palette */
     :root {
-      --color-primary: #475569;      /* Slate 600 */
-      --color-primary-light: #64748b; /* Slate 500 */
-      --color-secondary: #6b7280;     /* Gray 500 */
-      --color-accent: #3b82f6;        /* Blue 500 */
-      --color-success: #10b981;       /* Emerald 500 */
-      --color-warning: #f59e0b;       /* Amber 500 */
-      --color-danger: #ef4444;        /* Red 500 */
-      --color-bg: #f8fafc;            /* Slate 50 */
+      --color-primary: #1a1a2e;       /* Deep navy/purple - Luxury base */
+      --color-primary-light: #2d2d44; /* Lighter navy */
+      --color-secondary: #16213e;     /* Rich dark blue */
+      --color-accent: #c9a050;        /* Gold - Luxury accent */
+      --color-accent-dark: #b08d3f;   /* Darker gold */
+      --color-success: #2d6a4f;       /* Deep forest green */
+      --color-warning: #d4af37;       /* Antique gold */
+      --color-danger: #7c2d12;        /* Deep burgundy red */
+      --color-bg: #f5f5f0;            /* Warm off-white */
+      --color-bg-card: #ffffff;       /* Pure white for cards */
+      --color-border: #e5e5e0;        /* Soft beige border */
+      --color-text-dark: #1a1a1a;     /* Rich black */
+      --color-text-light: #6b6b6b;    /* Elegant gray */
     }
 
     /* Custom Animations */
@@ -59,10 +64,10 @@
   </style>
 </head>
 
-<body class="bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 min-h-screen">
+<body class="min-h-screen" style="background: linear-gradient(135deg, #f5f5f0 0%, #ffffff 100%);">
   
   <!-- Connection Status Banner -->
-  <div id="status-banner" class="bg-gradient-to-r from-emerald-600 to-teal-600 text-white p-3 text-center shadow-md transition-all">
+  <div id="status-banner" class="text-white p-2 text-center shadow-sm transition-all" style="background: linear-gradient(90deg, #1a1a2e 0%, #16213e 100%);">
     <div class="container mx-auto flex items-center justify-center gap-4 flex-wrap text-sm">
       <i class="fas fa-circle-check"></i>
       <span id="connection-status">Connecting to Backend...</span>
@@ -80,36 +85,38 @@
   </div>
   
   <!-- Main Navigation -->
-  <nav class="bg-gradient-to-r from-slate-700 to-slate-800 text-white shadow-lg">
-    <div class="container mx-auto px-6 py-4">
+  <nav class="bg-white shadow-md" style="border-bottom: 3px solid #c9a050;">
+    <div class="container mx-auto px-6 py-5">
       <div class="flex items-center justify-between flex-wrap gap-4">
-        <div class="flex items-center gap-3">
-          <i class="fas fa-graduation-cap text-3xl"></i>
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 rounded-full flex items-center justify-center" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);">
+            <i class="fas fa-graduation-cap text-2xl" style="color: #c9a050;"></i>
+          </div>
           <div>
-            <h1 class="text-2xl font-bold">Attendance Tracker Pro</h1>
-            <p class="text-xs opacity-90">Manage classes, students & attendance effortlessly</p>
+            <h1 class="text-2xl font-bold tracking-wide" style="color: #1a1a2e; letter-spacing: 0.5px;">ATTENDANCE TRACKER</h1>
+            <p class="text-xs tracking-wider" style="color: #6b6b6b; letter-spacing: 1px;">EXCELLENCE IN EDUCATION MANAGEMENT</p>
           </div>
         </div>
-        <div class="flex gap-2">
+        <div class="flex gap-3">
           <button onclick="showTab('dashboard')" 
-                  class="px-4 py-2 bg-slate-600 hover:bg-slate-500 rounded-lg transition flex items-center gap-2 shadow-sm">
-            <i class="fas fa-home"></i> Dashboard
+                  class="px-5 py-2 rounded transition-all font-medium" style="background: #f5f5f0; color: #1a1a2e; border: 1px solid #e5e5e0;">
+            <i class="fas fa-home mr-2"></i>Dashboard
           </button>
           <button onclick="showTab('statistics')" 
-                  class="px-4 py-2 bg-slate-600 hover:bg-slate-500 rounded-lg transition flex items-center gap-2 shadow-sm">
-            <i class="fas fa-chart-bar"></i> Statistics
+                  class="px-5 py-2 rounded transition-all font-medium" style="background: #f5f5f0; color: #1a1a2e; border: 1px solid #e5e5e0;">
+            <i class="fas fa-chart-bar mr-2"></i>Statistics
           </button>
           <button onclick="showTab('eligibility')" 
-                  class="px-4 py-2 bg-slate-600 hover:bg-slate-500 rounded-lg transition flex items-center gap-2 shadow-sm">
-            <i class="fas fa-graduation-cap"></i> Eligibility
+                  class="px-5 py-2 rounded transition-all font-medium" style="background: linear-gradient(135deg, #c9a050 0%, #b08d3f 100%); color: white; border: none; box-shadow: 0 2px 8px rgba(201, 160, 80, 0.3);">
+            <i class="fas fa-award mr-2"></i>Eligibility
           </button>
           <button onclick="location.reload()" 
-                  class="px-4 py-2 bg-slate-600 hover:bg-slate-500 rounded-lg transition flex items-center gap-2 shadow-sm">
-            <i class="fas fa-sync-alt"></i> Refresh
+                  class="px-5 py-2 rounded transition-all font-medium" style="background: #f5f5f0; color: #1a1a2e; border: 1px solid #e5e5e0;">
+            <i class="fas fa-sync-alt mr-2"></i>Refresh
           </button>
           <button onclick="logout()" 
-                  class="px-4 py-2 bg-rose-600 hover:bg-rose-500 rounded-lg transition flex items-center gap-2 shadow-sm">
-            <i class="fas fa-sign-out-alt"></i> Logout
+                  class="px-5 py-2 rounded transition-all font-medium" style="background: #7c2d12; color: white; border: none;">
+            <i class="fas fa-sign-out-alt mr-2"></i>Logout
           </button>
         </div>
       </div>
@@ -163,14 +170,16 @@
     
     <!-- Dashboard Statistics -->
     <section class="mb-8">
-      <div class="bg-white bg-opacity-95 rounded-xl shadow-2xl p-6">
-        <div class="flex items-center gap-2 mb-4">
-          <i class="fas fa-chart-line text-purple-600 text-xl"></i>
-          <h2 class="text-2xl font-bold text-gray-800">Dashboard Overview</h2>
+      <div class="bg-white rounded-lg p-8" style="box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+        <div class="flex items-center gap-3 mb-6 pb-4" style="border-bottom: 2px solid #c9a050;">
+          <div class="w-10 h-10 rounded-full flex items-center justify-center" style="background: linear-gradient(135deg, #c9a050 0%, #b08d3f 100%);">
+            <i class="fas fa-chart-line text-xl text-white"></i>
+          </div>
+          <h2 class="text-2xl font-bold tracking-wide" style="color: #1a1a2e; letter-spacing: 0.5px;">DASHBOARD OVERVIEW</h2>
         </div>
         <div id="dashboard-stats" class="min-h-[120px]">
           <div class="flex justify-center items-center py-8">
-            <i class="fas fa-spinner fa-spin text-3xl text-purple-600"></i>
+            <i class="fas fa-spinner fa-spin text-3xl" style="color: #c9a050;"></i>
           </div>
         </div>
       </div>
@@ -180,10 +189,12 @@
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
       
       <!-- Class Management Card -->
-      <article class="bg-white bg-opacity-95 rounded-xl shadow-2xl p-6 hover-scale">
-        <div class="flex items-center gap-2 mb-4">
-          <i class="fas fa-school text-blue-600 text-xl"></i>
-          <h2 class="text-2xl font-bold text-gray-800">Classes</h2>
+      <article class="bg-white rounded-lg p-6" style="box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+        <div class="flex items-center gap-3 mb-5 pb-3" style="border-bottom: 2px solid #c9a050;">
+          <div class="w-8 h-8 rounded-full flex items-center justify-center" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);">
+            <i class="fas fa-school text-lg" style="color: #c9a050;"></i>
+          </div>
+          <h2 class="text-xl font-bold tracking-wide" style="color: #1a1a2e; letter-spacing: 0.5px;">CLASSES</h2>
           <span id="class-count" class="ml-auto bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-sm font-semibold">0</span>
         </div>
         
@@ -196,8 +207,8 @@
                    class="flex-1 px-4 py-3 border border-slate-300 rounded-lg focus:border-slate-500 focus:ring-2 focus:ring-slate-200 focus:outline-none transition"
                    onkeypress="if(event.key==='Enter') addClass()">
             <button onclick="addClass()" 
-                    class="bg-slate-700 text-white px-6 py-3 rounded-lg hover:bg-slate-800 transition shadow-lg flex items-center gap-2">
-              <i class="fas fa-plus"></i> Add
+                    class="text-white px-6 py-3 rounded transition-all flex items-center gap-2 font-medium" style="background: linear-gradient(135deg, #c9a050 0%, #b08d3f 100%); box-shadow: 0 4px 12px rgba(201, 160, 80, 0.3);">
+              <i class="fas fa-plus"></i> Add Class
             </button>
           </div>
         </div>
@@ -209,11 +220,13 @@
       </article>
 
       <!-- Student Management Card -->
-      <article class="bg-white bg-opacity-95 rounded-xl shadow-2xl p-6 hover-scale">
-        <div class="flex items-center gap-2 mb-4">
-          <i class="fas fa-user-graduate text-emerald-600 text-xl"></i>
-          <h2 class="text-2xl font-bold text-slate-800">Students</h2>
-          <span id="student-count" class="ml-auto bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full text-sm font-semibold">0</span>
+      <article class="bg-white rounded-lg p-6" style="box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+        <div class="flex items-center gap-3 mb-5 pb-3" style="border-bottom: 2px solid #c9a050;">
+          <div class="w-8 h-8 rounded-full flex items-center justify-center" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);">
+            <i class="fas fa-user-graduate text-lg" style="color: #c9a050;"></i>
+          </div>
+          <h2 class="text-xl font-bold tracking-wide" style="color: #1a1a2e; letter-spacing: 0.5px;">STUDENTS</h2>
+          <span id="student-count" class="ml-auto px-4 py-1 rounded-full text-sm font-semibold" style="background: #c9a050; color: white;">0</span>
         </div>
         
         <!-- Add Student Form -->
@@ -234,7 +247,7 @@
             </select>
           </div>
           <button onclick="addStudent()" 
-                  class="w-full bg-emerald-600 text-white px-6 py-3 rounded-lg hover:bg-emerald-700 transition shadow-lg flex items-center justify-center gap-2">
+                  class="w-full text-white px-6 py-3 rounded transition-all flex items-center justify-center gap-2 font-medium" style="background: linear-gradient(135deg, #2d6a4f 0%, #1b4332 100%); box-shadow: 0 4px 12px rgba(45, 106, 79, 0.3);">
             <i class="fas fa-user-plus"></i> Add Student
           </button>
         </div>
@@ -365,13 +378,15 @@
       const status = document.getElementById('connection-status');
       
       if (connected) {
-        banner.className = 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white p-3 text-center shadow-lg transition-all';
-        status.innerHTML = '<i class="fas fa-circle-check"></i> Connected to Backend';
+        banner.style.background = 'linear-gradient(90deg, #2d6a4f 0%, #1b4332 100%)';
+        banner.className = 'text-white p-2 text-center shadow-sm transition-all';
+        status.innerHTML = '<i class="fas fa-circle-check"></i> Connected';
         // Update the time when connection status changes
         updateDateTime();
       } else {
-        banner.className = 'bg-gradient-to-r from-rose-600 to-red-600 text-white p-3 text-center shadow-lg transition-all';
-        status.innerHTML = '<i class="fas fa-circle-xmark"></i> Backend Connection Failed';
+        banner.style.background = 'linear-gradient(90deg, #7c2d12 0%, #5c1f0a 100%)';
+        banner.className = 'text-white p-2 text-center shadow-sm transition-all';
+        status.innerHTML = '<i class="fas fa-circle-xmark"></i> Connection Failed';
       }
     }
 
@@ -415,39 +430,39 @@
               </div>
             </div>
             
-            <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm hover-scale">
+            <div class="bg-white rounded-lg p-6 hover-scale" style="border: 2px solid #e5e5e0; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
               <div class="flex items-center justify-between">
                 <div>
-                  <div class="text-sm text-slate-600 mb-1 font-medium">Total Students</div>
-                  <div class="text-4xl font-bold text-slate-800">${students.length}</div>
+                  <div class="text-xs mb-1 font-medium tracking-wider" style="color: #6b6b6b; letter-spacing: 1px;">TOTAL STUDENTS</div>
+                  <div class="text-4xl font-bold" style="color: #1a1a2e;">${students.length}</div>
                 </div>
-                <div class="w-14 h-14 bg-emerald-50 rounded-lg flex items-center justify-center">
-                  <i class="fas fa-user-graduate text-2xl text-emerald-600"></i>
+                <div class="w-14 h-14 rounded-full flex items-center justify-center" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);">
+                  <i class="fas fa-user-graduate text-2xl" style="color: #c9a050;"></i>
                 </div>
               </div>
             </div>
             
-            <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm hover-scale">
+            <div class="bg-white rounded-lg p-6 hover-scale" style="border: 2px solid #e5e5e0; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
               <div class="flex items-center justify-between">
                 <div>
-                  <div class="text-sm text-slate-600 mb-1 font-medium">Present Today</div>
-                  <div class="text-4xl font-bold text-emerald-600">${present}</div>
-                  ${late > 0 ? `<div class="text-xs text-amber-600 font-medium">+${late} late</div>` : ''}
+                  <div class="text-xs mb-1 font-medium tracking-wider" style="color: #6b6b6b; letter-spacing: 1px;">PRESENT TODAY</div>
+                  <div class="text-4xl font-bold" style="color: #2d6a4f;">${present}</div>
+                  ${late > 0 ? `<div class="text-xs font-medium mt-1" style="color: #d4af37;">+${late} late arrivals</div>` : ''}
                 </div>
-                <div class="w-14 h-14 bg-emerald-50 rounded-lg flex items-center justify-center">
-                  <i class="fas fa-check-circle text-2xl text-emerald-600"></i>
+                <div class="w-14 h-14 rounded-full flex items-center justify-center" style="background: linear-gradient(135deg, #2d6a4f 0%, #1b4332 100%);">
+                  <i class="fas fa-check-circle text-2xl text-white"></i>
                 </div>
               </div>
             </div>
             
-            <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm hover-scale">
+            <div class="bg-white rounded-lg p-6 hover-scale" style="border: 2px solid #e5e5e0; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
               <div class="flex items-center justify-between">
                 <div>
-                  <div class="text-sm text-slate-600 mb-1 font-medium">Absent Today</div>
-                  <div class="text-4xl font-bold text-rose-600">${absent}</div>
+                  <div class="text-xs mb-1 font-medium tracking-wider" style="color: #6b6b6b; letter-spacing: 1px;">ABSENT TODAY</div>
+                  <div class="text-4xl font-bold" style="color: #7c2d12;">${absent}</div>
                 </div>
-                <div class="w-14 h-14 bg-rose-50 rounded-lg flex items-center justify-center">
-                  <i class="fas fa-times-circle text-2xl text-rose-600"></i>
+                <div class="w-14 h-14 rounded-full flex items-center justify-center" style="background: linear-gradient(135deg, #7c2d12 0%, #5c1f0a 100%);">
+                  <i class="fas fa-times-circle text-2xl text-white"></i>
                 </div>
               </div>
             </div>

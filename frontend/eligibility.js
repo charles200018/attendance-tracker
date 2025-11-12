@@ -81,60 +81,60 @@ function renderEligibilityReport(data, classes) {
   
   eligibilityContent.innerHTML = `
     <!-- Header Section -->
-    <div class="bg-gradient-to-r from-slate-700 to-slate-800 text-white rounded-xl p-8 mb-6 shadow-md">
+    <div class="text-white rounded-lg p-8 mb-6" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); box-shadow: 0 6px 24px rgba(0,0,0,0.15);">
       <div class="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h2 class="text-3xl font-bold mb-2">
-            <i class="fas fa-graduation-cap mr-3"></i>
-            Attendance Eligibility Policy
+          <h2 class="text-3xl font-bold mb-2 tracking-wide" style="letter-spacing: 0.5px;">
+            <i class="fas fa-award mr-3" style="color: #c9a050;"></i>
+            ATTENDANCE ELIGIBILITY POLICY
           </h2>
-          <p class="text-slate-300 text-lg">
-            Students must maintain <strong class="text-white">${ELIGIBILITY_THRESHOLD}% attendance</strong> to remain eligible
+          <p class="text-lg" style="color: rgba(255, 255, 255, 0.85);">
+            Students must maintain <strong style="color: #c9a050;">${ELIGIBILITY_THRESHOLD}% attendance</strong> to remain eligible
           </p>
         </div>
         <div class="text-right">
-          <div class="text-5xl font-bold mb-1">${ELIGIBILITY_THRESHOLD}%</div>
-          <div class="text-slate-300">Minimum Required</div>
+          <div class="text-5xl font-bold mb-1" style="color: #c9a050;">${ELIGIBILITY_THRESHOLD}%</div>
+          <div style="color: rgba(255, 255, 255, 0.75); letter-spacing: 1px;">MINIMUM REQUIRED</div>
         </div>
       </div>
     </div>
 
     <!-- Statistics Grid -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-      <div class="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
+      <div class="bg-white rounded-lg p-6" style="border: 2px solid #e5e5e0; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
         <div class="flex items-center justify-between">
           <div>
-            <div class="text-sm text-slate-600 mb-1 font-medium">Total Students</div>
-            <div class="text-4xl font-bold text-slate-800">${totalStudents}</div>
+            <div class="text-xs mb-1 font-medium tracking-wider" style="color: #6b6b6b; letter-spacing: 1px;">TOTAL STUDENTS</div>
+            <div class="text-4xl font-bold" style="color: #1a1a2e;">${totalStudents}</div>
           </div>
-          <div class="w-16 h-16 bg-blue-50 rounded-lg flex items-center justify-center">
-            <i class="fas fa-users text-2xl text-blue-600"></i>
+          <div class="w-14 h-14 rounded-full flex items-center justify-center" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);">
+            <i class="fas fa-users text-2xl" style="color: #c9a050;"></i>
           </div>
         </div>
       </div>
       
-      <div class="bg-white rounded-xl p-6 border border-emerald-200 shadow-sm">
+      <div class="bg-white rounded-lg p-6" style="border: 2px solid #2d6a4f; box-shadow: 0 4px 12px rgba(45, 106, 79, 0.15);">
         <div class="flex items-center justify-between">
           <div>
-            <div class="text-sm text-slate-600 mb-1 font-medium">Eligible Students</div>
-            <div class="text-4xl font-bold text-emerald-600">${eligibleCount}</div>
-            <div class="text-sm text-emerald-600 font-medium">${eligiblePercentage}% of total</div>
+            <div class="text-xs mb-1 font-medium tracking-wider" style="color: #6b6b6b; letter-spacing: 1px;">ELIGIBLE STUDENTS</div>
+            <div class="text-4xl font-bold" style="color: #2d6a4f;">${eligibleCount}</div>
+            <div class="text-sm font-medium mt-1" style="color: #2d6a4f;">${eligiblePercentage}% of total</div>
           </div>
-          <div class="w-16 h-16 bg-emerald-50 rounded-lg flex items-center justify-center">
-            <i class="fas fa-check-circle text-2xl text-emerald-600"></i>
+          <div class="w-14 h-14 rounded-full flex items-center justify-center" style="background: linear-gradient(135deg, #2d6a4f 0%, #1b4332 100%);">
+            <i class="fas fa-check-circle text-2xl text-white"></i>
           </div>
         </div>
       </div>
       
-      <div class="bg-white rounded-xl p-6 border border-rose-200 shadow-sm">
+      <div class="bg-white rounded-lg p-6" style="border: 2px solid #7c2d12; box-shadow: 0 4px 12px rgba(124, 45, 18, 0.15);">
         <div class="flex items-center justify-between">
           <div>
-            <div class="text-sm text-slate-600 mb-1 font-medium">At Risk Students</div>
-            <div class="text-4xl font-bold text-rose-600">${atRiskCount}</div>
-            <div class="text-sm text-rose-600 font-medium">${Math.round((atRiskCount / totalStudents) * 100)}% of total</div>
+            <div class="text-xs mb-1 font-medium tracking-wider" style="color: #6b6b6b; letter-spacing: 1px;">AT RISK STUDENTS</div>
+            <div class="text-4xl font-bold" style="color: #7c2d12;">${atRiskCount}</div>
+            <div class="text-sm font-medium mt-1" style="color: #7c2d12;">${Math.round((atRiskCount / totalStudents) * 100)}% of total</div>
           </div>
-          <div class="w-16 h-16 bg-rose-50 rounded-lg flex items-center justify-center">
-            <i class="fas fa-exclamation-triangle text-2xl text-rose-600"></i>
+          <div class="w-14 h-14 rounded-full flex items-center justify-center" style="background: linear-gradient(135deg, #7c2d12 0%, #5c1f0a 100%);">
+            <i class="fas fa-exclamation-triangle text-2xl text-white"></i>
           </div>
         </div>
       </div>
@@ -154,9 +154,9 @@ function renderEligibilityReport(data, classes) {
         </div>
         
         <div class="flex items-center gap-3">
-          <button onclick="exportEligibilityReport()" class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition flex items-center gap-2 shadow-sm">
+          <button onclick="exportEligibilityReport()" class="px-6 py-2 text-white rounded transition-all flex items-center gap-2 font-medium" style="background: linear-gradient(135deg, #2d6a4f 0%, #1b4332 100%); box-shadow: 0 4px 12px rgba(45, 106, 79, 0.3);">
             <i class="fas fa-file-excel"></i>
-            Export to CSV
+            EXPORT TO CSV
           </button>
         </div>
       </div>
