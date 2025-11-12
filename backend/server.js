@@ -6,7 +6,7 @@ const path = require('path');
 const os = require('os');
 const bcrypt = require('bcryptjs');
 const auth = require('./auth');
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3002;
 
 // Use temp directory to avoid OneDrive sync issues
 const dbPath = path.join(os.tmpdir(), 'attendance-tracker-db.json');
