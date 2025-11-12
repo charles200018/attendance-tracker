@@ -554,6 +554,73 @@ app.get('/api/attendance/:classId/:date', async (req, res) => {
   }
 });
 
+// Get attendance eligibility report (75% threshold)
+app.get('/api/attendance/eligibility/:classId?', async (req, res) => {
+  try {
+    const classIdParam = req.params.classId;
+    const db = await readDb();
+    
+    // Get all students or filter by class
+    let students = db.students;
+    if (classIdParam && classIdParam !== 'all') {
+      const classId = parseInt(classIdParam);
+      students = students.filter(s => s.class_id === classId);
+    }
+    
+    const eligibilityReport = students.map(student => {
+      // Get all attendance records for this student
+      const studentAttendance = db.attendance.filter(a => a.student_id === student.id);
+      
+      const totalClasses = studentAttendance.length;
+      const presentCount = studentAttendance.filter(a => a.status === 'present').length;
+      const lateCount = studentAttendance.filter(a => a.status === 'late').length;
+      const absentCount = studentAttendance.filter(a => a.status === 'absent').length;
+      
+      // Calculate percentage (considering late as half present)
+      const effectivePresent = presentCount + (lateCount * 0.5);
+      const attendancePercentage = totalClasses > 0 
+        ? Math.round((effectivePresent / totalClasses) * 100 * 100) / 100
+        : 0;
+      
+      const isEligible = attendancePercentage >= 75;
+      const shortfall = isEligible ? 0 : Math.ceil((0.75 * totalClasses) - effectivePresent);
+      
+      // Get class name
+      const studentClass = db.classes.find(c => c.id === student.class_id);
+      
+      return {
+        student_id: student.id,
+        student_name: student.name,
+        roll_number: student.roll,
+        class_id: student.class_id,
+        class_name: studentClass ? studentClass.name : 'Unknown',
+        total_classes: totalClasses,
+        present: presentCount,
+        late: lateCount,
+        absent: absentCount,
+        attendance_percentage: attendancePercentage,
+        is_eligible: isEligible,
+        classes_needed: shortfall,
+        status: isEligible ? 'eligible' : attendancePercentage >= 70 ? 'warning' : 'critical'
+      };
+    });
+    
+    // Sort by attendance percentage (lowest first to highlight at-risk students)
+    eligibilityReport.sort((a, b) => a.attendance_percentage - b.attendance_percentage);
+    
+    res.json({
+      threshold: 75,
+      total_students: eligibilityReport.length,
+      eligible_count: eligibilityReport.filter(r => r.is_eligible).length,
+      at_risk_count: eligibilityReport.filter(r => !r.is_eligible).length,
+      students: eligibilityReport
+    });
+  } catch (error) {
+    console.error('Error fetching eligibility report:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // ============ ADMIN CRUD ENDPOINTS ============
 
 // USER MANAGEMENT
