@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -408,10 +408,12 @@
     // Load admin data
     async function loadAdminData() {
       try {
+        const token = localStorage.getItem('att_token') || localStorage.getItem('token');
+        const authHeaders = { 'Authorization': `Bearer ${token}` };
         const [statsRes, logsRes, usersRes] = await Promise.all([
-          fetch(`${API_URL}/admin/stats`),
-          fetch(`${API_URL}/admin/activity-logs`),
-          fetch(`${API_URL}/admin/users`)
+          fetch(`${API_URL}/admin/stats`, { headers: authHeaders }),
+          fetch(`${API_URL}/admin/activity-logs`, { headers: authHeaders }),
+          fetch(`${API_URL}/admin/users`, { headers: authHeaders })
         ]);
 
         const stats = await statsRes.json();
@@ -566,7 +568,7 @@
             <div class="flex-1">
               <p class="text-sm font-semibold text-gray-900">${log.username}</p>
               <p class="text-xs text-gray-600">${log.details}</p>
-              <p class="text-xs text-gray-400 mt-1">${time} • ${log.ipAddress || 'Unknown IP'}</p>
+              <p class="text-xs text-gray-400 mt-1">${time} â€¢ ${log.ipAddress || 'Unknown IP'}</p>
             </div>
           </div>
         `;
@@ -1086,8 +1088,9 @@
       }
     });
 
-    console.log('🔐 Admin dashboard loaded');
+    console.log('ðŸ” Admin dashboard loaded');
   </script>
 
 </body>
 </html>
+
