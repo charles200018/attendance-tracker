@@ -244,14 +244,14 @@
       // Mirror to legacy key for other scripts
       localStorage.setItem('currentUser', JSON.stringify(currentUser));
 
-      if (currentUser.role !== 'teacher') {
-        // Not a teacher - redirect to student view
+      if (currentUser.role !== 'teacher' && currentUser.role !== 'admin') {
+        // Not a teacher or admin - redirect to student view
         window.location.href = 'student-view.html';
         return;
       }
 
-      // Teacher authenticated - continue loading
-      console.log('Authenticated as teacher:', currentUser.name);
+      // Teacher/Admin authenticated - continue loading
+      console.log('Authenticated as:', currentUser.role, '-', currentUser.name);
     })();
     
     // ============================================

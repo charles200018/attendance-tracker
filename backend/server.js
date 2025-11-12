@@ -109,30 +109,20 @@ function writeDb(data) {
 
 const app = express();
 
-// Detailed request logging middleware
-app.use((req, res, next) => {
-    console.log(`\n[${new Date().toISOString()}] ${req.method} ${req.url}`);
-    next();
-});
-
-// Configure CORS to allow access from any origin (for mobile access)
+// Configure CORS
 app.use(cors({
-    origin: true, // Allow all origins for mobile access
+    origin: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true,
     allowedHeaders: ['Content-Type', 'Accept']
 }));
 
-// Parse JSON bodies with size limit
+// Parse JSON bodies
 app.use(express.json({ limit: '1mb' }));
 
-// Single response logging middleware
+// Request logging middleware
 app.use((req, res, next) => {
-    const originalJson = res.json;
-    res.json = function(data) {
-        console.log(`[${new Date().toISOString()}] ${req.method} ${req.url} Response:`, data);
-        return originalJson.call(this, data);
-    };
+    console.log(`\n[${new Date().toISOString()}] ${req.method} ${req.url}`);
     next();
 });
 
@@ -322,14 +312,6 @@ app.get('/api/me', auth.verifyTokenMiddleware, async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
-});
-
-// Enable more detailed logging
-app.use((req, res, next) => {
-    console.log(`\n[${new Date().toISOString()}] ${req.method} ${req.url}`);
-    console.log('Request Headers:', req.headers);
-    console.log('Request Body:', req.body);
-    next();
 });
 
 // Classes endpoints
@@ -791,14 +773,6 @@ app.delete('/api/attendance/:id', async (req, res) => {
   }
 });
 
-
-// Add request logging
-app.use((req, res, next) => {
-    console.log(`\n[${new Date().toISOString()}] ${req.method} ${req.url}`);
-    console.log('Headers:', req.headers);
-    next();
-});
-
 // Add error handler middleware last
 app.use(errorHandler);
 
@@ -832,5 +806,3 @@ startServer().catch(err => {
     console.error('Fatal error:', err);
     process.exit(1);
 });
-
-// Return user info for the authenticated token (defined later)
