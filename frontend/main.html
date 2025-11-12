@@ -225,29 +225,33 @@
   <!-- Main Application Script -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="config.js"></script>
+  <script src="auth.js"></script>
   <script>
     // ============================================
     // AUTHENTICATION CHECK
     // ============================================
-    
     // Check if user is logged in and has teacher role
     (function checkAuth() {
-      const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
-      
-      if (!currentUser) {
+      const currentUser = window.getAuthUser ? window.getAuthUser() : JSON.parse(localStorage.getItem('currentUser') || 'null');
+      const token = window.getAuthToken ? window.getAuthToken() : localStorage.getItem('att_token');
+
+      if (!currentUser || !token) {
         // Not logged in - redirect to login page
         window.location.href = 'login.html';
         return;
       }
-      
-      if (currentUser.role !== 'teacher') {
-        // Not a teacher - redirect to student view
+
+      // Mirror to legacy key for other scripts
+      localStorage.setItem('currentUser', JSON.stringify(currentUser));
+
+      if (currentUser.role !== 'teacher' && currentUser.role !== 'admin') {
+        // Not a teacher or admin - redirect to student view
         window.location.href = 'student-view.html';
         return;
       }
-      
-      // Teacher authenticated - continue loading
-      console.log('Authenticated as teacher:', currentUser.name);
+
+      // Teacher/Admin authenticated - continue loading
+      console.log('Authenticated as:', currentUser.role, '-', currentUser.name);
     })();
     
     // ============================================
@@ -276,6 +280,7 @@
      * Logout function
      */
     function logout() {
+      if (window.clearAuth) window.clearAuth();
       localStorage.removeItem('currentUser');
       window.location.href = 'login.html';
     }
@@ -582,7 +587,7 @@
         const today = new Date().toISOString().split('T')[0];
         
         document.getElementById('attendance-section').innerHTML = `
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <select id="attendance-class" 
                     onchange="showAttendanceTable()"
                     class="px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none transition">
@@ -595,6 +600,12 @@
                    max="${today}" 
                    onchange="showAttendanceTable()"
                    class="px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none transition">
+            <div class="flex items-center gap-2">
+              <button onclick="exportAttendance()" 
+                      class="w-full bg-indigo-600 text-white px-4 py-3 rounded-lg hover:bg-indigo-700 transition flex items-center gap-2">
+                <i class="fas fa-file-csv"></i> Export CSV
+              </button>
+            </div>
           </div>
           <div id="attendance-table">
             <p class="text-gray-400 text-center py-8">
@@ -749,11 +760,15 @@
           status: form.querySelector(`input[name="status-${s.id}"]:checked`).value
         }));
         
-        const response = await fetch(`${API_URL}/attendance`, {
+        const response = await (window.fetchWithAuth ? window.fetchWithAuth(`${API_URL}/attendance`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ class_id: classId, date, records })
-        });
+        }) : fetch(`${API_URL}/attendance`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ class_id: classId, date, records })
+        }));
         
         if (response.ok) {
           showToast('✓ Attendance submitted successfully!');
@@ -765,6 +780,37 @@
       } catch (error) {
         console.error('Error submitting attendance:', error);
         showToast('Failed to submit attendance', 'error');
+      }
+    }
+
+    /**
+     * Export attendance as CSV for selected class/date
+     */
+    async function exportAttendance() {
+      const classId = document.getElementById('attendance-class')?.value;
+      const date = document.getElementById('attendance-date')?.value;
+
+      let url = `${API_URL}/attendance/export?format=csv`;
+      if (classId) url += `&classId=${encodeURIComponent(classId)}`;
+      if (date) url += `&from=${encodeURIComponent(date)}&to=${encodeURIComponent(date)}`;
+
+      try {
+        showToast('Preparing CSV export...', 'info');
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('Export failed');
+        const blob = await res.blob();
+        const filename = `attendance_export_${Date.now()}.csv`;
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(link.href), 5000);
+        showToast('CSV downloaded', 'success');
+      } catch (err) {
+        console.error('Export error:', err);
+        showToast('Failed to export CSV', 'error');
       }
     }
 

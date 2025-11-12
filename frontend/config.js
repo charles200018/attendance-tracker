@@ -1,14 +1,13 @@
-// Auto-detect API URL based on current host
+// API URL: use same origin so frontend works when served from backend (single host/port)
 const API_URL = (() => {
-  const hostname = window.location.hostname;
-  
-  // If accessing via localhost or 127.0.0.1, use localhost
-  if (hostname === 'localhost' || hostname === '127.0.0.1') {
-    return 'http://127.0.0.1:3002/api';
+  try {
+    // Use window.location.origin which includes protocol and port
+    const origin = window.location.origin || `${window.location.protocol}//${window.location.hostname}`;
+    return `${origin}/api`;
+  } catch (e) {
+    // Fallback to localhost:3000/api
+    return 'http://127.0.0.1:3000/api';
   }
-  
-  // Otherwise, use the same hostname (for mobile access)
-  return `http://${hostname}:3002/api`;
 })();
 
 console.log('API URL:', API_URL);
