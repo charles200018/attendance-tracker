@@ -48,3 +48,7 @@ PORTABLE-PACKAGE/
 
 # Deployment guide (keep if needed for reference)
 # DEPLOYMENT-GUIDE.md
+
+node_modules/
+backend/node_modules/
+*.log
