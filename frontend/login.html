@@ -14,35 +14,36 @@
     }
     .fade-in { animation: fadeIn 0.5s ease-out; }
     
-    @keyframes gradient {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
+    .luxury-bg {
+      background: linear-gradient(135deg, #f5f5f0 0%, #ffffff 50%, #f5f5f0 100%);
     }
-    .animated-gradient {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
-      background-size: 200% 200%;
-      animation: gradient 15s ease infinite;
+    
+    .luxury-accent {
+      color: #c9a050;
+    }
+    
+    .luxury-gradient {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
     }
   </style>
 </head>
 
-<body class="animated-gradient min-h-screen flex items-center justify-center p-4">
+<body class="luxury-bg min-h-screen flex items-center justify-center p-4">
   
   <!-- Login Container -->
   <div class="fade-in w-full max-w-md">
     
     <!-- Logo & Title -->
     <div class="text-center mb-8">
-      <div class="bg-white bg-opacity-20 backdrop-blur-lg rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
-        <i class="fas fa-graduation-cap text-white text-4xl"></i>
+      <div class="rounded-full w-24 h-24 mx-auto mb-6 flex items-center justify-center luxury-gradient" style="box-shadow: 0 8px 24px rgba(26, 26, 46, 0.3);">
+        <i class="fas fa-graduation-cap luxury-accent text-5xl"></i>
       </div>
-      <h1 class="text-4xl font-bold text-white mb-2">Attendance Tracker</h1>
-      <p class="text-white text-opacity-90">Please sign in to continue</p>
+      <h1 class="text-4xl font-bold mb-2 tracking-wide" style="color: #1a1a2e; letter-spacing: 1px;">ATTENDANCE TRACKER</h1>
+      <p class="tracking-wider" style="color: #6b6b6b; letter-spacing: 1px;">PLEASE SIGN IN TO CONTINUE</p>
     </div>
     
     <!-- Login Card -->
-    <div class="bg-white bg-opacity-95 backdrop-blur-xl rounded-2xl shadow-2xl p-8">
+    <div class="bg-white rounded-lg p-8" style="box-shadow: 0 8px 32px rgba(0,0,0,0.12); border: 2px solid #e5e5e0;">
       
       <!-- Alert Message -->
       <div id="alert-message" class="hidden mb-6 p-4 rounded-lg"></div>
@@ -76,13 +77,15 @@
               id="password" 
               name="password" 
               required
-              class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none transition"
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none transition"
+              style="border-color: #e5e5e0;"
               placeholder="Enter your password"
             >
             <button 
               type="button" 
               onclick="togglePassword()" 
-              class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+              class="absolute right-3 top-1/2 transform -translate-y-1/2 hover:text-gray-700"
+              style="color: #6b6b6b;"
             >
               <i id="password-icon" class="fas fa-eye"></i>
             </button>
@@ -93,10 +96,11 @@
         <button 
           type="submit" 
           id="login-btn"
-          class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-3 rounded-lg font-semibold hover:from-purple-700 hover:to-indigo-700 transition-all transform hover:scale-105 shadow-lg"
+          class="w-full text-white py-4 rounded-lg font-semibold transition-all shadow-lg tracking-wide"
+          style="background: linear-gradient(135deg, #c9a050 0%, #b08d3f 100%); letter-spacing: 1px; box-shadow: 0 4px 16px rgba(201, 160, 80, 0.4);"
         >
           <i class="fas fa-sign-in-alt mr-2"></i>
-          <span id="login-btn-text">Sign In</span>
+          <span id="login-btn-text">SIGN IN</span>
         </button>
         
       </form>
@@ -105,9 +109,9 @@
     
     <!-- Footer -->
     <div class="text-center mt-6">
-      <p class="text-white text-opacity-80 text-sm">
-        <i class="fas fa-shield-alt mr-1"></i>
-        Secure Login System
+      <p class="text-sm tracking-wider" style="color: #6b6b6b; letter-spacing: 1px;">
+        <i class="fas fa-shield-alt mr-2 luxury-accent"></i>
+        SECURE LOGIN SYSTEM
       </p>
     </div>
     

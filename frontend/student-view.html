@@ -14,26 +14,36 @@
       to { opacity: 1; transform: translateY(0); }
     }
     .slide-in { animation: slideIn 0.3s ease-out; }
+    
+    .luxury-accent {
+      color: #c9a050;
+    }
+    
+    .luxury-gradient {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    }
   </style>
 </head>
 
-<body class="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 min-h-screen">
+<body style="min-height: 100vh; background: linear-gradient(135deg, #f5f5f0 0%, #ffffff 100%);">
   
   <!-- Header -->
-  <header class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-xl">
-    <div class="container mx-auto px-6 py-4">
+  <header class="bg-white shadow-md" style="border-bottom: 3px solid #c9a050;">
+    <div class="container mx-auto px-6 py-5">
       <div class="flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <i class="fas fa-user-graduate text-3xl"></i>
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 rounded-full flex items-center justify-center luxury-gradient">
+            <i class="fas fa-user-graduate text-2xl luxury-accent"></i>
+          </div>
           <div>
-            <h1 class="text-2xl font-bold">Student Portal</h1>
-            <p class="text-xs opacity-90" id="student-name">Loading...</p>
+            <h1 class="text-2xl font-bold tracking-wide" style="color: #1a1a2e; letter-spacing: 0.5px;">STUDENT PORTAL</h1>
+            <p class="text-xs tracking-wider" id="student-name" style="color: #6b6b6b; letter-spacing: 1px;">Loading...</p>
           </div>
         </div>
         <button onclick="logout()" type="button"
-                class="px-4 py-2 bg-red-500 bg-opacity-80 rounded-lg hover:bg-opacity-100 transition flex items-center gap-2">
-          <i class="fas fa-sign-out-alt"></i>
-          <span>Logout</span>
+                class="px-5 py-2 rounded transition-all font-medium text-white" style="background: #7c2d12; border: none;">
+          <i class="fas fa-sign-out-alt mr-2"></i>
+          Logout
         </button>
       </div>
     </div>
@@ -43,12 +53,16 @@
   <div class="container mx-auto px-4 md:px-6 py-8">
     
     <!-- Welcome Card -->
-    <div class="bg-white rounded-xl shadow-lg p-6 mb-6 slide-in">
-      <h2 class="text-2xl font-bold text-gray-800 mb-2">
-        <i class="fas fa-chart-line text-purple-600 mr-2"></i>
-        My Attendance Overview
-      </h2>
-      <p class="text-gray-600">View your attendance records and statistics</p>
+    <div class="bg-white rounded-lg p-8 mb-6 slide-in" style="box-shadow: 0 4px 20px rgba(0,0,0,0.1); border: 2px solid #e5e5e0;">
+      <div class="flex items-center gap-3 mb-3 pb-3" style="border-bottom: 2px solid #c9a050;">
+        <div class="w-10 h-10 rounded-full flex items-center justify-center" style="background: linear-gradient(135deg, #c9a050 0%, #b08d3f 100%);">
+          <i class="fas fa-chart-line text-xl text-white"></i>
+        </div>
+        <h2 class="text-2xl font-bold tracking-wide" style="color: #1a1a2e; letter-spacing: 0.5px;">
+          MY ATTENDANCE OVERVIEW
+        </h2>
+      </div>
+      <p class="tracking-wide" style="color: #6b6b6b;">View your attendance records and statistics</p>
     </div>
     
     <!-- Statistics Cards -->
@@ -175,21 +189,41 @@
         
         // Display stats cards
         document.getElementById('stats-cards').innerHTML = `
-          <div class="bg-gradient-to-br from-green-500 to-green-600 text-white rounded-xl p-6 shadow-lg">
-            <div class="text-3xl font-bold mb-2">${present}</div>
-            <div class="text-sm opacity-90">Present Days</div>
+          <div class="bg-white rounded-lg p-6" style="border: 2px solid #e5e5e0; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
+            <div class="flex items-center justify-between mb-3">
+              <div class="w-12 h-12 rounded-full flex items-center justify-center" style="background: linear-gradient(135deg, #2d6a4f 0%, #1b4332 100%);">
+                <i class="fas fa-check-circle text-xl text-white"></i>
+              </div>
+            </div>
+            <div class="text-3xl font-bold mb-1" style="color: #2d6a4f;">${present}</div>
+            <div class="text-xs tracking-wider" style="color: #6b6b6b; letter-spacing: 1px;">PRESENT DAYS</div>
           </div>
-          <div class="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white rounded-xl p-6 shadow-lg">
-            <div class="text-3xl font-bold mb-2">${late}</div>
-            <div class="text-sm opacity-90">Late Days</div>
+          <div class="bg-white rounded-lg p-6" style="border: 2px solid #e5e5e0; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
+            <div class="flex items-center justify-between mb-3">
+              <div class="w-12 h-12 rounded-full flex items-center justify-center" style="background: linear-gradient(135deg, #d4af37 0%, #b08d3f 100%);">
+                <i class="fas fa-clock text-xl text-white"></i>
+              </div>
+            </div>
+            <div class="text-3xl font-bold mb-1" style="color: #d4af37;">${late}</div>
+            <div class="text-xs tracking-wider" style="color: #6b6b6b; letter-spacing: 1px;">LATE DAYS</div>
           </div>
-          <div class="bg-gradient-to-br from-red-500 to-red-600 text-white rounded-xl p-6 shadow-lg">
-            <div class="text-3xl font-bold mb-2">${absent}</div>
-            <div class="text-sm opacity-90">Absent Days</div>
+          <div class="bg-white rounded-lg p-6" style="border: 2px solid #e5e5e0; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
+            <div class="flex items-center justify-between mb-3">
+              <div class="w-12 h-12 rounded-full flex items-center justify-center" style="background: linear-gradient(135deg, #7c2d12 0%, #5c1f0a 100%);">
+                <i class="fas fa-times-circle text-xl text-white"></i>
+              </div>
+            </div>
+            <div class="text-3xl font-bold mb-1" style="color: #7c2d12;">${absent}</div>
+            <div class="text-xs tracking-wider" style="color: #6b6b6b; letter-spacing: 1px;">ABSENT DAYS</div>
           </div>
-          <div class="bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-xl p-6 shadow-lg">
-            <div class="text-3xl font-bold mb-2">${attendanceRate}%</div>
-            <div class="text-sm opacity-90">Attendance Rate</div>
+          <div class="bg-white rounded-lg p-6" style="border: 2px solid #c9a050; box-shadow: 0 4px 12px rgba(201, 160, 80, 0.2);">
+            <div class="flex items-center justify-between mb-3">
+              <div class="w-12 h-12 rounded-full flex items-center justify-center" style="background: linear-gradient(135deg, #c9a050 0%, #b08d3f 100%);">
+                <i class="fas fa-chart-pie text-xl text-white"></i>
+              </div>
+            </div>
+            <div class="text-3xl font-bold mb-1" style="color: #c9a050;">${attendanceRate}%</div>
+            <div class="text-xs tracking-wider" style="color: #6b6b6b; letter-spacing: 1px;">ATTENDANCE RATE</div>
           </div>
         `;
         
