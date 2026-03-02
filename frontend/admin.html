@@ -673,7 +673,10 @@
             <td class="px-6 py-4 text-sm text-gray-600 font-mono editable" contenteditable="true" data-id="${student.id}" data-field="roll" onblur="updateStudent(${student.id})">${student.roll}</td>
             <td class="px-6 py-4 text-sm text-gray-600 editable" contenteditable="true" data-id="${student.id}" data-field="class_id" onblur="updateStudent(${student.id})">${student.class_id}</td>
             <td class="px-6 py-4 text-sm text-gray-600">${studentClass ? studentClass.name : 'N/A'}</td>
-            <td class="px-6 py-4 text-sm">
+            <td class="px-6 py-4 text-sm space-x-2">
+              <a href="student-details.html?id=${student.id}" class="text-purple-600 hover:text-purple-800" title="View Details">
+                <i class="fas fa-eye"></i>
+              </a>
               <button onclick="deleteStudent(${student.id})" class="text-red-600 hover:text-red-800" title="Delete">
                 <i class="fas fa-trash"></i>
               </button>

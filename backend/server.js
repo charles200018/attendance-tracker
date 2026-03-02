@@ -112,9 +112,9 @@ const app = express();
 // Configure CORS
 app.use(cors({
     origin: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     credentials: true,
-    allowedHeaders: ['Content-Type', 'Accept']
+    allowedHeaders: ['Content-Type', 'Accept', 'Authorization']
 }));
 
 // Parse JSON bodies
@@ -838,6 +838,208 @@ app.delete('/api/attendance/:id', async (req, res) => {
     res.json({ success: true, message: 'Attendance record deleted' });
   } catch (error) {
     console.error('Error deleting attendance:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ============================================
+// EXAM & MARKS ENDPOINTS
+// ============================================
+
+// Get all exams
+app.get('/api/exams', async (req, res) => {
+  try {
+    const db = await readDb();
+    res.json(db.exams || []);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get marks for a student
+app.get('/api/marks/student/:studentId', async (req, res) => {
+  try {
+    const studentId = parseInt(req.params.studentId);
+    const db = await readDb();
+    const marks = (db.marks || []).filter(m => m.student_id === studentId);
+    res.json(marks);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get all marks (for admin/teacher)
+app.get('/api/marks', auth.verifyTokenMiddleware, auth.requireRole(['teacher', 'admin']), async (req, res) => {
+  try {
+    const db = await readDb();
+    res.json(db.marks || []);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Add/Update marks
+app.post('/api/marks', auth.verifyTokenMiddleware, auth.requireRole(['teacher', 'admin']), async (req, res) => {
+  try {
+    const { student_id, exam_id, subject, marks_obtained, max_marks } = req.body;
+    const db = await readDb();
+    
+    if (!db.marks) db.marks = [];
+    
+    // Check if mark already exists
+    const existingIndex = db.marks.findIndex(m => 
+      m.student_id === student_id && m.exam_id === exam_id && m.subject === subject
+    );
+    
+    const markRecord = {
+      id: existingIndex >= 0 ? db.marks[existingIndex].id : (db.marks.length + 1),
+      student_id,
+      exam_id,
+      subject,
+      marks_obtained,
+      max_marks,
+      percentage: ((marks_obtained / max_marks) * 100).toFixed(2),
+      updated_at: new Date().toISOString()
+    };
+    
+    if (existingIndex >= 0) {
+      db.marks[existingIndex] = markRecord;
+    } else {
+      db.marks.push(markRecord);
+    }
+    
+    writeDb(db);
+    res.json({ success: true, mark: markRecord });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ============================================
+// STUDY MATERIALS ENDPOINTS
+// ============================================
+
+// Get all materials
+app.get('/api/materials', async (req, res) => {
+  try {
+    const db = await readDb();
+    res.json(db.materials || []);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get materials by class
+app.get('/api/materials/class/:classId', async (req, res) => {
+  try {
+    const classId = parseInt(req.params.classId);
+    const db = await readDb();
+    const materials = (db.materials || []).filter(m => m.class_id === classId || m.class_id === 0);
+    res.json(materials);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Add material (teacher/admin only)
+app.post('/api/materials', auth.verifyTokenMiddleware, auth.requireRole(['teacher', 'admin']), async (req, res) => {
+  try {
+    const { title, description, subject, class_id, file_url, file_type } = req.body;
+    const db = await readDb();
+    
+    if (!db.materials) db.materials = [];
+    
+    const material = {
+      id: db.materials.length + 1,
+      title,
+      description,
+      subject,
+      class_id: class_id || 0,
+      file_url,
+      file_type: file_type || 'pdf',
+      uploaded_by: req.user.username,
+      created_at: new Date().toISOString()
+    };
+    
+    db.materials.push(material);
+    writeDb(db);
+    res.json({ success: true, material });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ============================================
+// STUDENT DETAILS ENDPOINT
+// ============================================
+
+// Get comprehensive student details
+app.get('/api/student-details/:studentId', async (req, res) => {
+  try {
+    const studentId = parseInt(req.params.studentId);
+    const db = await readDb();
+    
+    // Get student info
+    const student = db.students.find(s => s.id === studentId);
+    if (!student) {
+      return res.status(404).json({ error: 'Student not found' });
+    }
+    
+    // Get class info
+    const classInfo = db.classes.find(c => c.id === student.class_id);
+    
+    // Get attendance records
+    const attendance = (db.attendance || []).filter(a => a.student_id === studentId);
+    
+    // Calculate monthly attendance stats
+    const monthlyAttendance = {};
+    attendance.forEach(a => {
+      const month = a.date.substring(0, 7); // YYYY-MM
+      if (!monthlyAttendance[month]) {
+        monthlyAttendance[month] = { present: 0, absent: 0, late: 0, total: 0 };
+      }
+      monthlyAttendance[month][a.status]++;
+      monthlyAttendance[month].total++;
+    });
+    
+    // Get marks
+    const marks = (db.marks || []).filter(m => m.student_id === studentId);
+    
+    // Get exams
+    const exams = db.exams || [];
+    
+    // Get materials for student's class
+    const materials = (db.materials || []).filter(m => m.class_id === student.class_id || m.class_id === 0);
+    
+    // Calculate overall stats
+    const totalPresent = attendance.filter(a => a.status === 'present').length;
+    const totalLate = attendance.filter(a => a.status === 'late').length;
+    const totalAbsent = attendance.filter(a => a.status === 'absent').length;
+    const attendancePercentage = attendance.length > 0 
+      ? (((totalPresent + totalLate) / attendance.length) * 100).toFixed(1) 
+      : 0;
+    
+    res.json({
+      student: {
+        ...student,
+        class_name: classInfo?.name || 'Unknown'
+      },
+      attendance: {
+        records: attendance,
+        monthly: monthlyAttendance,
+        stats: {
+          total: attendance.length,
+          present: totalPresent,
+          late: totalLate,
+          absent: totalAbsent,
+          percentage: attendancePercentage
+        }
+      },
+      marks,
+      exams,
+      materials
+    });
+  } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });

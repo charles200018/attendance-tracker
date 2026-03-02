@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Details - Attendance Tracker</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-in { animation: fadeIn 0.5s ease-out; }
+    .luxury-gradient { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); }
+    .luxury-accent { color: #c9a050; }
+    .card { background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .tab-active { background: linear-gradient(135deg, #c9a050 0%, #b08d3f 100%); color: white; }
+    .tab-inactive { background: #f3f4f6; color: #4b5563; }
+    .grade-A { background: #10b981; }
+    .grade-B { background: #3b82f6; }
+    .grade-C { background: #f59e0b; }
+    .grade-D { background: #ef4444; }
+  </style>
+</head>
+
+<body class="bg-gray-50 min-h-screen">
+  <!-- Navigation -->
+  <nav class="luxury-gradient text-white shadow-lg">
+    <div class="container mx-auto px-6 py-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-4">
+          <a href="main.html" class="text-gray-300 hover:text-white transition">
+            <i class="fas fa-arrow-left text-xl"></i>
+          </a>
+          <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
+            <i class="fas fa-user-graduate luxury-accent text-xl"></i>
+          </div>
+          <div>
+            <h1 class="text-xl font-bold">Student Details</h1>
+            <p class="text-sm text-gray-300" id="student-name-header">Loading...</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-4">
+          <span class="text-sm" id="user-info">Loading...</span>
+          <button onclick="logout()" class="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 rounded-lg transition">
+            <i class="fas fa-sign-out-alt mr-2"></i>Logout
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container mx-auto px-6 py-8 fade-in">
+    <!-- Student Info Card -->
+    <div class="card p-6 mb-6">
+      <div class="flex flex-wrap items-center gap-6">
+        <div class="w-24 h-24 rounded-full luxury-gradient flex items-center justify-center">
+          <i class="fas fa-user text-4xl luxury-accent"></i>
+        </div>
+        <div class="flex-1">
+          <h2 class="text-2xl font-bold text-gray-800" id="student-name">Loading...</h2>
+          <p class="text-gray-500" id="student-class">Class: --</p>
+          <p class="text-gray-500" id="student-roll">Roll Number: --</p>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="text-center p-4 bg-green-50 rounded-lg">
+            <div class="text-2xl font-bold text-green-600" id="stat-present">0</div>
+            <div class="text-sm text-gray-500">Present</div>
+          </div>
+          <div class="text-center p-4 bg-yellow-50 rounded-lg">
+            <div class="text-2xl font-bold text-yellow-600" id="stat-late">0</div>
+            <div class="text-sm text-gray-500">Late</div>
+          </div>
+          <div class="text-center p-4 bg-red-50 rounded-lg">
+            <div class="text-2xl font-bold text-red-600" id="stat-absent">0</div>
+            <div class="text-sm text-gray-500">Absent</div>
+          </div>
+          <div class="text-center p-4 bg-blue-50 rounded-lg">
+            <div class="text-2xl font-bold text-blue-600" id="stat-percentage">0%</div>
+            <div class="text-sm text-gray-500">Attendance</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="flex gap-2 mb-6 flex-wrap">
+      <button onclick="showTab('attendance')" id="tab-attendance" class="px-6 py-3 rounded-lg font-semibold transition tab-active">
+        <i class="fas fa-chart-line mr-2"></i>Attendance
+      </button>
+      <button onclick="showTab('marks')" id="tab-marks" class="px-6 py-3 rounded-lg font-semibold transition tab-inactive">
+        <i class="fas fa-file-alt mr-2"></i>Mark Sheet
+      </button>
+      <button onclick="showTab('materials')" id="tab-materials" class="px-6 py-3 rounded-lg font-semibold transition tab-inactive">
+        <i class="fas fa-book mr-2"></i>Study Materials
+      </button>
+    </div>
+
+    <!-- Attendance Tab -->
+    <div id="content-attendance" class="space-y-6">
+      <!-- Monthly Attendance Chart -->
+      <div class="card p-6">
+        <h3 class="text-lg font-bold text-gray-800 mb-4">
+          <i class="fas fa-chart-bar luxury-accent mr-2"></i>Monthly Attendance Overview
+        </h3>
+        <div class="h-80">
+          <canvas id="attendanceChart"></canvas>
+        </div>
+      </div>
+      
+      <!-- Attendance Records -->
+      <div class="card p-6">
+        <h3 class="text-lg font-bold text-gray-800 mb-4">
+          <i class="fas fa-calendar-alt luxury-accent mr-2"></i>Recent Attendance Records
+        </h3>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Day</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+              </tr>
+            </thead>
+            <tbody id="attendance-table" class="divide-y divide-gray-200">
+              <tr><td colspan="3" class="px-4 py-8 text-center text-gray-500">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Marks Tab -->
+    <div id="content-marks" class="hidden space-y-6">
+      <!-- Exam Summary -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="card p-6">
+          <div class="flex items-center gap-4">
+            <div class="w-14 h-14 rounded-full bg-blue-100 flex items-center justify-center">
+              <i class="fas fa-clipboard-list text-blue-600 text-2xl"></i>
+            </div>
+            <div>
+              <p class="text-sm text-gray-500">Internal Exam 1</p>
+              <p class="text-2xl font-bold text-gray-800" id="internal1-total">--</p>
+            </div>
+          </div>
+        </div>
+        <div class="card p-6">
+          <div class="flex items-center gap-4">
+            <div class="w-14 h-14 rounded-full bg-purple-100 flex items-center justify-center">
+              <i class="fas fa-clipboard-list text-purple-600 text-2xl"></i>
+            </div>
+            <div>
+              <p class="text-sm text-gray-500">Internal Exam 2</p>
+              <p class="text-2xl font-bold text-gray-800" id="internal2-total">--</p>
+            </div>
+          </div>
+        </div>
+        <div class="card p-6">
+          <div class="flex items-center gap-4">
+            <div class="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center">
+              <i class="fas fa-award text-green-600 text-2xl"></i>
+            </div>
+            <div>
+              <p class="text-sm text-gray-500">External Exam</p>
+              <p class="text-2xl font-bold text-gray-800" id="external-total">--</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mark Sheet Table -->
+      <div class="card p-6">
+        <h3 class="text-lg font-bold text-gray-800 mb-4">
+          <i class="fas fa-table luxury-accent mr-2"></i>Complete Mark Sheet
+        </h3>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Subject</th>
+                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Internal 1 (50)</th>
+                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Internal 2 (50)</th>
+                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">External (100)</th>
+                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Total (200)</th>
+                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Grade</th>
+              </tr>
+            </thead>
+            <tbody id="marks-table" class="divide-y divide-gray-200">
+              <tr><td colspan="6" class="px-4 py-8 text-center text-gray-500">Loading...</td></tr>
+            </tbody>
+            <tfoot class="bg-gray-50 font-bold">
+              <tr>
+                <td class="px-4 py-3">Grand Total</td>
+                <td class="px-4 py-3 text-center" id="grand-internal1">--</td>
+                <td class="px-4 py-3 text-center" id="grand-internal2">--</td>
+                <td class="px-4 py-3 text-center" id="grand-external">--</td>
+                <td class="px-4 py-3 text-center" id="grand-total">--</td>
+                <td class="px-4 py-3 text-center" id="grand-grade">--</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+
+      <!-- Performance Chart -->
+      <div class="card p-6">
+        <h3 class="text-lg font-bold text-gray-800 mb-4">
+          <i class="fas fa-chart-radar luxury-accent mr-2"></i>Subject-wise Performance
+        </h3>
+        <div class="h-80">
+          <canvas id="marksChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Materials Tab -->
+    <div id="content-materials" class="hidden">
+      <div class="card p-6">
+        <h3 class="text-lg font-bold text-gray-800 mb-4">
+          <i class="fas fa-folder-open luxury-accent mr-2"></i>Study Materials
+        </h3>
+        <div id="materials-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div class="text-center text-gray-500 py-8 col-span-full">Loading...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="config.js"></script>
+  <script>
+    let studentData = null;
+    let attendanceChart = null;
+    let marksChart = null;
+
+    // Get student ID from URL
+    function getStudentId() {
+      const params = new URLSearchParams(window.location.search);
+      return parseInt(params.get('id')) || null;
+    }
+
+    // Check auth
+    function checkAuth() {
+      const userData = localStorage.getItem('currentUser');
+      if (!userData) {
+        window.location.href = 'login.html';
+        return null;
+      }
+      return JSON.parse(userData);
+    }
+
+    function logout() {
+      localStorage.removeItem('currentUser');
+      localStorage.removeItem('att_token');
+      window.location.href = 'login.html';
+    }
+
+    // Tab management
+    function showTab(tabName) {
+      ['attendance', 'marks', 'materials'].forEach(tab => {
+        document.getElementById(`tab-${tab}`).className = `px-6 py-3 rounded-lg font-semibold transition ${tab === tabName ? 'tab-active' : 'tab-inactive'}`;
+        document.getElementById(`content-${tab}`).classList.toggle('hidden', tab !== tabName);
+      });
+    }
+
+    // Load student data
+    async function loadStudentDetails() {
+      const studentId = getStudentId();
+      if (!studentId) {
+        alert('No student ID provided');
+        window.location.href = 'main.html';
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_URL}/student-details/${studentId}`);
+        if (!response.ok) throw new Error('Failed to load student details');
+        
+        studentData = await response.json();
+        console.log('Student data:', studentData);
+        
+        renderStudentInfo();
+        renderAttendance();
+        renderMarks();
+        renderMaterials();
+      } catch (error) {
+        console.error('Error loading student details:', error);
+        alert('Failed to load student details');
+      }
+    }
+
+    // Render student info
+    function renderStudentInfo() {
+      const { student, attendance } = studentData;
+      
+      document.getElementById('student-name-header').textContent = student.name;
+      document.getElementById('student-name').textContent = student.name;
+      document.getElementById('student-class').textContent = `Class: ${student.class_name}`;
+      document.getElementById('student-roll').textContent = `Roll Number: ${student.roll}`;
+      
+      document.getElementById('stat-present').textContent = attendance.stats.present;
+      document.getElementById('stat-late').textContent = attendance.stats.late;
+      document.getElementById('stat-absent').textContent = attendance.stats.absent;
+      document.getElementById('stat-percentage').textContent = `${attendance.stats.percentage}%`;
+    }
+
+    // Render attendance
+    function renderAttendance() {
+      const { attendance } = studentData;
+      
+      // Render table
+      const tbody = document.getElementById('attendance-table');
+      const records = [...attendance.records].reverse().slice(0, 20);
+      
+      if (records.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" class="px-4 py-8 text-center text-gray-500">No attendance records found</td></tr>';
+      } else {
+        tbody.innerHTML = records.map(r => {
+          const date = new Date(r.date);
+          const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
+          const statusColors = {
+            present: 'bg-green-100 text-green-800',
+            late: 'bg-yellow-100 text-yellow-800',
+            absent: 'bg-red-100 text-red-800'
+          };
+          return `
+            <tr class="hover:bg-gray-50">
+              <td class="px-4 py-3">${r.date}</td>
+              <td class="px-4 py-3">${dayName}</td>
+              <td class="px-4 py-3">
+                <span class="px-3 py-1 rounded-full text-xs font-semibold ${statusColors[r.status]}">
+                  ${r.status.toUpperCase()}
+                </span>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
+      
+      // Render chart
+      renderAttendanceChart();
+    }
+
+    function renderAttendanceChart() {
+      const { monthly } = studentData.attendance;
+      const months = Object.keys(monthly).sort();
+      
+      const ctx = document.getElementById('attendanceChart').getContext('2d');
+      
+      if (attendanceChart) attendanceChart.destroy();
+      
+      attendanceChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: months.map(m => {
+            const [year, month] = m.split('-');
+            return new Date(year, month - 1).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+          }),
+          datasets: [
+            {
+              label: 'Present',
+              data: months.map(m => monthly[m].present),
+              backgroundColor: '#10b981',
+              borderRadius: 4
+            },
+            {
+              label: 'Late',
+              data: months.map(m => monthly[m].late),
+              backgroundColor: '#f59e0b',
+              borderRadius: 4
+            },
+            {
+              label: 'Absent',
+              data: months.map(m => monthly[m].absent),
+              backgroundColor: '#ef4444',
+              borderRadius: 4
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'top' }
+          },
+          scales: {
+            x: { stacked: true },
+            y: { stacked: true, beginAtZero: true }
+          }
+        }
+      });
+    }
+
+    // Render marks
+    function renderMarks() {
+      const { marks, exams } = studentData;
+      const subjects = ['Mathematics', 'Science', 'English', 'Social Studies', 'Hindi'];
+      
+      // Organize marks by subject and exam
+      const marksBySubject = {};
+      subjects.forEach(sub => {
+        marksBySubject[sub] = { internal1: null, internal2: null, external: null };
+      });
+      
+      marks.forEach(m => {
+        if (marksBySubject[m.subject]) {
+          if (m.exam_id === 1) marksBySubject[m.subject].internal1 = m.marks_obtained;
+          else if (m.exam_id === 2) marksBySubject[m.subject].internal2 = m.marks_obtained;
+          else if (m.exam_id === 3) marksBySubject[m.subject].external = m.marks_obtained;
+        }
+      });
+      
+      // Calculate totals
+      let grandInternal1 = 0, grandInternal2 = 0, grandExternal = 0;
+      
+      const tbody = document.getElementById('marks-table');
+      tbody.innerHTML = subjects.map(subject => {
+        const m = marksBySubject[subject];
+        const i1 = m.internal1 ?? '--';
+        const i2 = m.internal2 ?? '--';
+        const ext = m.external ?? '--';
+        
+        let total = '--';
+        let grade = '--';
+        let gradeClass = '';
+        
+        if (m.internal1 !== null && m.internal2 !== null && m.external !== null) {
+          total = m.internal1 + m.internal2 + m.external;
+          grandInternal1 += m.internal1;
+          grandInternal2 += m.internal2;
+          grandExternal += m.external;
+          
+          const percentage = (total / 200) * 100;
+          if (percentage >= 90) { grade = 'A+'; gradeClass = 'grade-A'; }
+          else if (percentage >= 80) { grade = 'A'; gradeClass = 'grade-A'; }
+          else if (percentage >= 70) { grade = 'B+'; gradeClass = 'grade-B'; }
+          else if (percentage >= 60) { grade = 'B'; gradeClass = 'grade-B'; }
+          else if (percentage >= 50) { grade = 'C'; gradeClass = 'grade-C'; }
+          else if (percentage >= 40) { grade = 'D'; gradeClass = 'grade-D'; }
+          else { grade = 'F'; gradeClass = 'grade-D'; }
+        }
+        
+        return `
+          <tr class="hover:bg-gray-50">
+            <td class="px-4 py-3 font-medium">${subject}</td>
+            <td class="px-4 py-3 text-center">${i1}</td>
+            <td class="px-4 py-3 text-center">${i2}</td>
+            <td class="px-4 py-3 text-center">${ext}</td>
+            <td class="px-4 py-3 text-center font-semibold">${total}</td>
+            <td class="px-4 py-3 text-center">
+              ${grade !== '--' ? `<span class="px-3 py-1 rounded-full text-xs font-semibold text-white ${gradeClass}">${grade}</span>` : '--'}
+            </td>
+          </tr>
+        `;
+      }).join('');
+      
+      // Update totals
+      const grandTotal = grandInternal1 + grandInternal2 + grandExternal;
+      document.getElementById('grand-internal1').textContent = grandInternal1 || '--';
+      document.getElementById('grand-internal2').textContent = grandInternal2 || '--';
+      document.getElementById('grand-external').textContent = grandExternal || '--';
+      document.getElementById('grand-total').textContent = grandTotal || '--';
+      
+      // Update exam summary cards
+      document.getElementById('internal1-total').textContent = grandInternal1 ? `${grandInternal1}/250` : '--';
+      document.getElementById('internal2-total').textContent = grandInternal2 ? `${grandInternal2}/250` : '--';
+      document.getElementById('external-total').textContent = grandExternal ? `${grandExternal}/500` : '--';
+      
+      // Calculate overall grade
+      if (grandTotal > 0) {
+        const overallPct = (grandTotal / 1000) * 100;
+        let overallGrade = 'F';
+        if (overallPct >= 90) overallGrade = 'A+';
+        else if (overallPct >= 80) overallGrade = 'A';
+        else if (overallPct >= 70) overallGrade = 'B+';
+        else if (overallPct >= 60) overallGrade = 'B';
+        else if (overallPct >= 50) overallGrade = 'C';
+        else if (overallPct >= 40) overallGrade = 'D';
+        document.getElementById('grand-grade').innerHTML = `<span class="px-3 py-1 rounded-full text-xs font-semibold text-white ${overallPct >= 60 ? 'grade-A' : overallPct >= 40 ? 'grade-C' : 'grade-D'}">${overallGrade}</span>`;
+      }
+      
+      // Render marks chart
+      renderMarksChart(marksBySubject, subjects);
+    }
+
+    function renderMarksChart(marksBySubject, subjects) {
+      const ctx = document.getElementById('marksChart').getContext('2d');
+      
+      if (marksChart) marksChart.destroy();
+      
+      marksChart = new Chart(ctx, {
+        type: 'radar',
+        data: {
+          labels: subjects,
+          datasets: [
+            {
+              label: 'Internal 1 (%)',
+              data: subjects.map(s => marksBySubject[s].internal1 ? (marksBySubject[s].internal1 / 50) * 100 : 0),
+              borderColor: '#3b82f6',
+              backgroundColor: 'rgba(59, 130, 246, 0.2)',
+              borderWidth: 2
+            },
+            {
+              label: 'Internal 2 (%)',
+              data: subjects.map(s => marksBySubject[s].internal2 ? (marksBySubject[s].internal2 / 50) * 100 : 0),
+              borderColor: '#8b5cf6',
+              backgroundColor: 'rgba(139, 92, 246, 0.2)',
+              borderWidth: 2
+            },
+            {
+              label: 'External (%)',
+              data: subjects.map(s => marksBySubject[s].external ? (marksBySubject[s].external / 100) * 100 : 0),
+              borderColor: '#10b981',
+              backgroundColor: 'rgba(16, 185, 129, 0.2)',
+              borderWidth: 2
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            r: {
+              beginAtZero: true,
+              max: 100
+            }
+          }
+        }
+      });
+    }
+
+    // Render materials
+    function renderMaterials() {
+      const { materials } = studentData;
+      const grid = document.getElementById('materials-grid');
+      
+      if (!materials || materials.length === 0) {
+        grid.innerHTML = '<div class="text-center text-gray-500 py-8 col-span-full"><i class="fas fa-folder-open text-4xl mb-4"></i><p>No study materials available yet</p></div>';
+        return;
+      }
+      
+      const fileIcons = {
+        pdf: 'fa-file-pdf text-red-500',
+        doc: 'fa-file-word text-blue-500',
+        ppt: 'fa-file-powerpoint text-orange-500',
+        video: 'fa-file-video text-purple-500',
+        link: 'fa-link text-green-500'
+      };
+      
+      grid.innerHTML = materials.map(m => `
+        <div class="border border-gray-200 rounded-lg p-4 hover:shadow-lg transition">
+          <div class="flex items-start gap-4">
+            <div class="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center">
+              <i class="fas ${fileIcons[m.file_type] || 'fa-file text-gray-500'} text-2xl"></i>
+            </div>
+            <div class="flex-1">
+              <h4 class="font-semibold text-gray-800">${m.title}</h4>
+              <p class="text-sm text-gray-500">${m.subject}</p>
+              <p class="text-xs text-gray-400 mt-1">${m.description || ''}</p>
+            </div>
+          </div>
+          <div class="mt-4 flex justify-between items-center">
+            <span class="text-xs text-gray-400">
+              <i class="fas fa-user mr-1"></i>${m.uploaded_by || 'Teacher'}
+            </span>
+            <a href="${m.file_url || '#'}" target="_blank" class="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600 transition">
+              <i class="fas fa-download mr-1"></i>Download
+            </a>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Initialize
+    window.addEventListener('load', () => {
+      const user = checkAuth();
+      if (user) {
+        document.getElementById('user-info').textContent = `${user.name} (${user.role})`;
+        loadStudentDetails();
+      }
+    });
+  </script>
+</body>
+</html>
